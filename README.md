@@ -1,19 +1,12 @@
-# Template Repository
+# Minecraft: Bedrock Edition Dynamic Data Storage
 
-A short description about this project here.
+A library that allows you to read and write data into a shulker box based buffer for uses with the scripting API.
 
-## How To Use (GUI)
-
-Coming Soon.
-
-## How To Use (CLI)
+## How To Use
 
 Coming Soon.
 
 ## Language(s) Used
 
-* \<language> \<version>
-
-# Screen Shots
-
-Coming Soon.
+* Javascript 2024
+* Node v21.7.3
