@@ -1,0 +1,16 @@
+{
+  "name": "dynamic-data-storage",
+  "version": "1.0.0",
+  "main": "scripts/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GPL-2.0",
+  "description": "",
+  "devDependencies": {
+    "@minecraft/server": "^1.14.0",
+    "@types/node": "^22.7.4"
+  }
+}
