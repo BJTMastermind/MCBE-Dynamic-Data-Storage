@@ -1,0 +1,6 @@
+# Typescript stuff
+/node_modules/
+/dist/
+
+# Misc files
+*.directory
