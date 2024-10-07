@@ -44,13 +44,13 @@ function writeFileTest() {
 
     let locations = [{x:5, y:-64, z:4}, {x:5, y:-64, z:5}];
 
-    buffer.writeByte(20);
-    buffer.writeShort(locations.length);
+    buffer.writeByte({value: 20});
+    buffer.writeShort({value: locations.length});
 
     for (let i = 0; i < locations.length; i++) {
-        buffer.writeInt(locations[i].x);
-        buffer.writeInt({twosComplement: true}, locations[i].y);
-        buffer.writeInt(locations[i].z);
+        buffer.writeInt({value: locations[i].x});
+        buffer.writeInt({value: locations[i].y});
+        buffer.writeInt({value: locations[i].z});
     }
 }
 
