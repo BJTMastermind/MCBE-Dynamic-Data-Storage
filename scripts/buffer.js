@@ -1,5 +1,5 @@
 import { ItemStack, world } from "@minecraft/server";
-// import { encodeUTF8, decodeUTF8 } from "./encoding.js";
+import Encoder from "./utils/encoder.js";
 
 /**
  * A class for parsing and writing binary data to and from a multi-shulker box based buffer within a Minecraft world.
@@ -76,7 +76,7 @@ export default class Buffer {
     /**
      * Changes the buffers reading position to the specified offset.
      *
-     * @param {*} offset
+     * @param {*} offset The new offset location.
      */
     setOffset(offset) {
         if (offset < 0 && offset > MAX_SIZE) {
@@ -227,21 +227,22 @@ export default class Buffer {
      * @param {*} length The length of the string to read.
      * @returns The string read from the shulker box.
      */
-    // readString(offset = this.#offset, length) {
-    //     if (arguments.length > 1) {
-    //         this.#offset = offset;
-    //     }
+    readString({ offset = this.#offset, length } = {}) {
+        if (arguments.length > 1) {
+            this.#offset = offset;
+        }
 
-    //     let strBytes = [];
-    //     for (let i = 0; i < length; i++) {
-    //         strBytes.push(this.#read(offset + i));
-    //     }
+        let strBytes = [];
+        for (let i = 0; i < length; i++) {
+            strBytes.push(this.#read(offset + i));
+        }
 
-    //     let value = decodeUTF8(strBytes);
+        let encoder = new Encoder();
+        let value = encoder.decode(strBytes);
 
-    //     this.#offset += length + value.length;
-    //     return value;
-    // }
+        this.#offset += value.length;
+        return value;
+    }
 
     /**
      * Writes a boolean to the shulker box at the specified offset.
@@ -380,22 +381,19 @@ export default class Buffer {
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The string to write to the shulker box.
      */
-    // writeString(offset = this.#offset, value) {
-    //     if (arguments.length > 1) {
-    //         this.#offset = offset;
-    //     }
+    writeString({ offset = this.#offset, value } = {}) {
+        if (arguments.length > 1) {
+            this.#offset = offset;
+        }
 
-    //     let length = value.length * 2;
-    //     this.writeShort({offset}, length);
+        let encoder = new Encoder();
+        let bytes = encoder.encode(value);
 
-    //     let bytes = encodeUTF8(value);
-    //     offset += 2;
-
-    //     for (let i = 0; i < length; i++) {
-    //         this.#write(offset + i, bytes[i]);
-    //     }
-    //     this.#offset += length;
-    // }
+        for (let i = 0; i < bytes.length; i++) {
+            this.#write({offset: (offset + i), value: bytes[i]});
+        }
+        this.#offset += bytes.length;
+    }
 
     #read(offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
