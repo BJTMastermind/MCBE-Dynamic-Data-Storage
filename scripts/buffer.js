@@ -60,7 +60,7 @@ export default class Buffer {
      * Returns the current offset of the buffer as a xyz location.
      *
      * @param {*} offset The offset of the shulker box to read from.
-     * @returns The offset of the buffer in the form of `{x, y, z, slot}`.
+     * @returns The offset of the buffer in the form of `[x, z, slot]`.
      */
     getOffsetLocation(offset = this.#offset) {
         let blockOffset = Math.floor(offset / 27);
@@ -70,7 +70,7 @@ export default class Buffer {
 
         let blockSlot = offset % 27;
 
-        return { x: blockX, y: -64, z: blockZ, slot: blockSlot };
+        return [blockX, blockZ, blockSlot];
     }
 
     /**
@@ -93,7 +93,7 @@ export default class Buffer {
      * @returns The boolean read from the shulker box.
      */
     readBoolean(offset = this.#offset) {
-        if (arguments.length > 1) {
+        if (arguments.length > 0) {
             this.#offset = offset;
         }
 
@@ -249,12 +249,12 @@ export default class Buffer {
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The boolean to write to the shulker box.
      */
-    writeBoolean(offset = this.#offset, value) {
+    writeBoolean({offset = this.#offset, value} = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        this.#write(offset, value ? 1 : 0);
+        this.#write({offset, value: (value & 0xFF) ? 1 : 0});
         this.#offset += 1;
     }
 
@@ -262,20 +262,15 @@ export default class Buffer {
      * Writes a byte to the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to write to.
-     * @param {*} twosComplement Whether the value should be written as a twos-complement value.
      * @param {*} value The byte to write to the shulker box.
      */
-    writeByte({ offset = this.#offset, twosComplement = false } = {}, value) {
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+    writeByte({offset = this.#offset, value} = {}) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        if (value < 0) {
-            twosComplement = true;
-        }
-
-        let byte = twosComplement ? this.#twosComplement(value, 8) : value;
-        this.#write(offset, byte);
+        let byte = (value & 0xFF);
+        this.#write({offset, value: byte});
         this.#offset += 1;
     }
 
@@ -283,22 +278,16 @@ export default class Buffer {
      * Writes a short to the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to write to.
-     * @param {*} twosComplement Whether the value should be written as a twos-complement value.
      * @param {*} value The short to write to the shulker box.
      */
-    writeShort({ offset = this.#offset, twosComplement = false } = {}, value) {
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+    writeShort({offset = this.#offset, value} = {}) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        if (value < 0) {
-            twosComplement = true;
-        }
-
-        for (let i = 0, j = 0; i < 2; i++) {
-            let byte = twosComplement ? this.#twosComplement(((value >> j) & 0xFF), 16) : ((value >> j) & 0xFF);
-            this.#write(offset + i, byte);
-            j += 8;
+        for (let i = 0; i < 2; i++) {
+            let byte = ((value >> ((1 - i) * 8)) & 0xFF);
+            this.#write({offset: (offset + i), value: byte});
         }
         this.#offset += 2;
     }
@@ -307,22 +296,16 @@ export default class Buffer {
      * Writes a integer to the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to write to.
-     * @param {*} twosComplement Whether the value should be written as a twos-complement value.
      * @param {*} value The integer to write to the shulker box.
      */
-    writeInt({ offset = this.#offset, twosComplement = false } = {}, value) {
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+    writeInt({offset = this.#offset, value} = {}) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        if (value < 0) {
-            twosComplement = true;
-        }
-
-        for (let i = 0, j = 0; i < 4; i++) {
-            let byte = twosComplement ? this.#twosComplement(((value >> j) & 0xFF), 32) : ((value >> j) & 0xFF);
-            this.#write(offset + i, byte);
-            j += 8;
+        for (let i = 0; i < 4; i++) {
+            let byte = ((value >> ((3 - i) * 8)) & 0xFF);
+            this.#write({offset: (offset + i), value: byte});
         }
         this.#offset += 4;
     }
@@ -331,22 +314,16 @@ export default class Buffer {
      * Writes a long to the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to write to.
-     * @param {*} twosComplement Whether the value should be written as a twos-complement value.
      * @param {*} value The long to write to the shulker box.
      */
-    writeLong({ offset = this.#offset, twosComplement = false } = {}, value) {
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+    writeLong({offset = this.#offset, value} = {}) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        if (value < 0) {
-            twosComplement = true;
-        }
-
-        for (let i = 0, j = 0; i < 8; i++) {
-            let byte = twosComplement ? this.#twosComplement(((value >> j) & 0xFF), 64) : ((value >> j) & 0xFF);
-            this.#write(offset + i, byte);
-            j += 8;
+        for (let i = 0; i < 8; i++) {
+            let byte = ((value >> ((7 - i) * 8)) & 0xFF);
+            this.#write({offset: (offset + i), value: byte});
         }
         this.#offset += 8;
     }
@@ -357,7 +334,7 @@ export default class Buffer {
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The float to write to the shulker box.
      */
-    writeFloat(offset = this.#offset, value) {
+    writeFloat({offset = this.#offset, value} = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -369,7 +346,7 @@ export default class Buffer {
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write(offset + i, bytes[i]);
+            this.#write({offset: (offset + i), value: bytes[i]});
         }
         this.#offset += 4;
     }
@@ -380,7 +357,7 @@ export default class Buffer {
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The double to write to the shulker box.
      */
-    writeDouble(offset = this.#offset, value) {
+    writeDouble({offset = this.#offset, value} = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -392,7 +369,7 @@ export default class Buffer {
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write(offset + i, bytes[i]);
+            this.#write({offset: (offset + i), value: bytes[i]});
         }
         this.#offset += 8;
     }
@@ -421,7 +398,7 @@ export default class Buffer {
     // }
 
     #read(offset = this.#offset) {
-        let {x:blockX, y:_, z:blockZ, slot:blockSlot} = this.getOffsetLocation(offset);
+        let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
         let dataBlock = world.getDimension("overworld").getBlock({x:blockX, y:-64, z:blockZ});
 
@@ -438,7 +415,7 @@ export default class Buffer {
             case "minecraft:white_stained_glass":
                 return dataSlot.amount;
             case "minecraft:light_gray_stained_glass":
-                return dataSlot.amount + 65;
+                return dataSlot.amount + 64;
             case "minecraft:gray_stained_glass":
                 return dataSlot.amount + 128;
             case "minecraft:black_stained_glass":
@@ -446,8 +423,8 @@ export default class Buffer {
         }
     }
 
-    #write(offset = this.#offset, value) {
-        let {x:blockX, y:_, z:blockZ, slot:blockSlot} = this.getOffsetLocation(offset);
+    #write({offset = this.#offset, value} = {}) {
+        let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
         let dataBlock = world.getDimension("minecraft:overworld").getBlock({x:blockX, y:-64, z:blockZ});
 
@@ -461,7 +438,7 @@ export default class Buffer {
         } else if (value >= 1 && value <= 64) {
             itemStack = new ItemStack("minecraft:white_stained_glass", value);
         } else if (value >= 65 && value <= 128) {
-            itemStack = new ItemStack("minecraft:light_gray_stained_glass", value - 65);
+            itemStack = new ItemStack("minecraft:light_gray_stained_glass", value - 64);
         } else if (value >= 129 && value <= 192) {
             itemStack = new ItemStack("minecraft:gray_stained_glass", value - 128);
         } else if (value >= 193 && value <= 255) {
