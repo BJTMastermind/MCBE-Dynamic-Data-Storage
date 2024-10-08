@@ -10,7 +10,7 @@
   "license": "GPL-2.0",
   "description": "",
   "devDependencies": {
-    "@minecraft/server": "^1.14.0",
+    "@minecraft/server": "^1.15.0-beta.1.21.31-stable",
     "@types/node": "^22.7.4"
   }
 }

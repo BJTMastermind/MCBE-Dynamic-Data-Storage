@@ -1,4 +1,4 @@
-import { system, world } from "@minecraft/server"
+import { BlockVolume, system, world } from "@minecraft/server"
 import Buffer from "./buffer.js"
 
 let read = false;
@@ -34,7 +34,7 @@ system.runInterval(() => {
         write = false;
     }
     if (clear) {
-        world.getDimension("minecraft:overworld").runCommand("fill 0 -64 0 47 -64 47 air");
+        world.getDimension("minecraft:overworld").fillBlocks(new BlockVolume({x:0, y:-64, z:0}, {x:47, y:-64, z:47}), "minecraft:air");
         clear = false;
     }
 }, 40);

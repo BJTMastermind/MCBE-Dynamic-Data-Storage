@@ -1,4 +1,4 @@
-import { ItemStack, world } from "@minecraft/server";
+import { BlockVolume, ItemStack, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
@@ -26,8 +26,8 @@ export default class Buffer {
 
         if (checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:light_gray_shulker_box") {
             checkDimension.runCommand("tickingarea add 0 -64 0 47 -64 47 \"dynamic-data-storage-area\" true");
-            checkDimension.runCommand("fill 0 -64 0 47 -64 47 air");
-            checkDimension.runCommand("fill 0 -63 0 47 -63 47 bedrock");
+            checkDimension.fillBlocks(new BlockVolume({x:0, y:-64, z:0}, {x:47, y:-64, z:47}), "minecraft:air");
+            checkDimension.fillBlocks(new BlockVolume({x:0, y:-63, z:0}, {x:47, y:-63, z:47}), "minecraft:bedrock");
         }
     }
 
