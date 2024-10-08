@@ -102,7 +102,27 @@ function encodeUTF8(str) {
 }
 
 function encodeUTF16(str) {
+    let bytes = [];
 
+    for (let i = 0; i < str.length; i++) {
+        let codePoint = str.codePointAt(i);
+
+        if (codePoint > 0xFFFF) {
+            codePoint -= 0x10000;
+            let highSurrogate = 0xD800 | (codePoint >> 10);
+            let lowSurrogate = 0xDC00 | (codePoint & 0x3FF);
+            bytes.push(highSurrogate >> 8, highSurrogate & 0xFF);
+            bytes.push(lowSurrogate >> 8, lowSurrogate & 0xFF);
+            continue;
+        }
+
+        bytes.push(codePoint >> 8, codePoint & 0xFF);
+    }
+
+    // Add prefixed 2 byte length
+    let result = concatArray(numberToBytes(bytes.length, 2), bytes);
+
+    return result;
 }
 
 ////////////////////////////////////////
@@ -159,7 +179,25 @@ function decodeUTF8(bytes) {
 }
 
 function decodeUTF16(bytes) {
+    let str = "";
 
+    for (let i = 0; i < bytes.length; i += 2) {
+        let value = (bytes[i] << 8) | bytes[i + 1];
+
+        if (value >= 0xD800 && value <= 0xDFFF) {
+            let highSurrogate = value;
+            i += 2;
+            let lowSurrogate = (bytes[i] << 8) | bytes[i + 1];
+            let codePoint = 0x10000 + ((highSurrogate & 0xD800) << 10) | (lowSurrogate & 0xDC00);
+
+            str += String.fromCodePoint(codePoint);
+            continue;
+        }
+
+        str += String.fromCodePoint(value);
+    }
+
+    return str;
 }
 
 //////////////////////////////////////
