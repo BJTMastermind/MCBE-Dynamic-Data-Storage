@@ -44,7 +44,7 @@ export default class Buffer {
      * Clears all of the buffers of data.
      */
     clear() {
-        world.getDimension("minecraft:overworld").runCommand("fill 0 -64 0 47 -64 47 air");
+        world.getDimension("minecraft:overworld").fillBlocks(new BlockVolume({x:0, y:-64, z:0}, {x:47, y:-64, z:47}), "minecraft:air");
         this.#offset = 0;
     }
 
