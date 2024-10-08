@@ -1,5 +1,6 @@
 import { ItemStack, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
+import { CharSets } from "./utils/charsets.js";
 
 /**
  * A class for parsing and writing binary data to and from a multi-shulker box based buffer within a Minecraft world.
@@ -224,20 +225,23 @@ export default class Buffer {
      * Reads a string from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
-     * @param {*} length The length of the string to read.
+     * @param {*} charSet The character set of the string.
      * @returns The string read from the shulker box.
      */
-    readString({ offset = this.#offset, length } = {}) {
+    readString({ offset = this.#offset, charSet = CharSets.UTF8 } = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
+
+        let length = this.readShort({offset});
+        offset += 2;
 
         let strBytes = [];
         for (let i = 0; i < length; i++) {
             strBytes.push(this.#read(offset + i));
         }
 
-        let encoder = new Encoder();
+        let encoder = new Encoder(charSet);
         let value = encoder.decode(strBytes);
 
         this.#offset += value.length;
@@ -380,13 +384,14 @@ export default class Buffer {
      *
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The string to write to the shulker box.
+     * @param {*} charSet The character set of the string.
      */
-    writeString({ offset = this.#offset, value } = {}) {
+    writeString({ offset = this.#offset, value, charSet = CharSets.UTF8 } = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        let encoder = new Encoder();
+        let encoder = new Encoder(charSet);
         let bytes = encoder.encode(value);
 
         for (let i = 0; i < bytes.length; i++) {
