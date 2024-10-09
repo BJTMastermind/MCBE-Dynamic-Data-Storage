@@ -70,7 +70,7 @@ function parseFile() {
 
     for (let i = 0; i < length; i++) {
         let x = buffer.readInt();
-        let y = buffer.readInt({twosComplement: true});
+        let y = buffer.readInt();
         let z = buffer.readInt();
 
         locations.push({x, y, z});
