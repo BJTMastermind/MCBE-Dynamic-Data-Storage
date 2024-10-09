@@ -1,4 +1,4 @@
-import { CharSets } from "./charsets.js"
+import { CharSets } from "../enums/charsets.js"
 
 /**
  * A class for encoding and decoding strings to and from byte arrays.
@@ -28,12 +28,12 @@ export default class Encoder {
      *
      * @returns The encoded string as a byte array.
      */
-    encode(string) {
+    encode(string, littleEndian = false) {
         switch (this.#charSet) {
             case "utf8":
                 return encodeUTF8(string);
             case "utf16":
-                return encodeUTF16(string);
+                return encodeUTF16(string, littleEndian);
         }
     }
 
@@ -42,12 +42,12 @@ export default class Encoder {
      *
      * @returns The decoded byte array as a string.
      */
-    decode(bytes) {
+    decode(bytes, littleEndian = false) {
         switch (this.#charSet) {
             case "utf8":
                 return decodeUTF8(bytes);
             case "utf16":
-                return decodeUTF16(bytes);
+                return decodeUTF16(bytes, littleEndian);
         }
     }
 }
@@ -101,7 +101,7 @@ function encodeUTF8(str) {
     return result;
 }
 
-function encodeUTF16(str) {
+function encodeUTF16(str, littleEndian = false) {
     let bytes = [];
 
     for (let i = 0; i < str.length; i++) {
@@ -109,18 +109,36 @@ function encodeUTF16(str) {
 
         if (codePoint > 0xFFFF) {
             codePoint -= 0x10000;
-            let highSurrogate = 0xD800 | (codePoint >> 10);
-            let lowSurrogate = 0xDC00 | (codePoint & 0x3FF);
-            bytes.push(highSurrogate >> 8, highSurrogate & 0xFF);
-            bytes.push(lowSurrogate >> 8, lowSurrogate & 0xFF);
+            let highSurrogate;
+            let lowSurrogate;
+
+            if (littleEndian) {
+                highSurrogate = (codePoint >> 10) | 0xD800;
+                lowSurrogate = (codePoint & 0x3FF) | 0xDC00;
+            } else {
+                highSurrogate = 0xD800 | (codePoint >> 10);
+                lowSurrogate = 0xDC00 | (codePoint & 0x3FF);
+            }
+
+            if (littleEndian) {
+                bytes.push(highSurrogate & 0xFF, highSurrogate >> 8);
+                bytes.push(lowSurrogate & 0xFF, lowSurrogate >> 8);
+            } else {
+                bytes.push(highSurrogate >> 8, highSurrogate & 0xFF);
+                bytes.push(lowSurrogate >> 8, lowSurrogate & 0xFF);
+            }
             continue;
         }
 
-        bytes.push(codePoint >> 8, codePoint & 0xFF);
+        if (littleEndian) {
+            bytes.push(codePoint & 0xFF, codePoint >> 8);
+        } else {
+            bytes.push(codePoint >> 8, codePoint & 0xFF);
+        }
     }
 
     // Add prefixed 2 byte length
-    let result = concatArray(numberToBytes(bytes.length, 2), bytes);
+    let result = concatArray(numberToBytes(bytes.length, 2, littleEndian), bytes);
 
     return result;
 }
@@ -178,17 +196,25 @@ function decodeUTF8(bytes) {
     return str;
 }
 
-function decodeUTF16(bytes) {
+function decodeUTF16(bytes, littleEndian = false) {
     let str = "";
 
     for (let i = 0; i < bytes.length; i += 2) {
-        let value = (bytes[i] << 8) | bytes[i + 1];
+        let value = littleEndian
+            ? bytes[i] | (bytes[i + 1] << 8)
+            : (bytes[i] << 8) | bytes[i + 1];
 
         if (value >= 0xD800 && value <= 0xDFFF) {
             let highSurrogate = value;
             i += 2;
-            let lowSurrogate = (bytes[i] << 8) | bytes[i + 1];
-            let codePoint = 0x10000 + ((highSurrogate & 0xD800) << 10) | (lowSurrogate & 0xDC00);
+
+            let lowSurrogate = littleEndian
+                ? bytes[i + 1] | (bytes[i] << 8)
+                : (bytes[i] << 8) | bytes[i + 1];
+
+            let codePoint = littleEndian
+                ? 0x10000 + (lowSurrogate & 0xDC00) | ((highSurrogate & 0xD800) << 10)
+                : 0x10000 + ((highSurrogate & 0xD800) << 10) | (lowSurrogate & 0xDC00);
 
             str += String.fromCodePoint(codePoint);
             continue;
@@ -204,10 +230,13 @@ function decodeUTF16(bytes) {
 ////////// Helper Functions //////////
 //////////////////////////////////////
 
-function numberToBytes(value, byteCount) {
+function numberToBytes(value, byteCount, littleEndian = false) {
     let result = [];
     for (let i = 0; i < byteCount; i++) {
-        let byte = ((value >> ((byteCount - 1 - i) * 8)) & 0xFF);
+        let byte = littleEndian
+            ? ((value >> (i * 8)) & 0xFF)
+            : ((value >> ((byteCount - 1 - i) * 8)) & 0xFF);
+
         result.push(byte);
     }
     return result;

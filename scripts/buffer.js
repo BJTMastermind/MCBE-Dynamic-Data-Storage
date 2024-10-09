@@ -1,6 +1,6 @@
 import { BlockVolume, ItemStack, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
-import { CharSets } from "./utils/charsets.js";
+import { CharSets } from "./enums/charsets.js";
 
 /**
  * A class for parsing and writing binary data to and from a multi-shulker box based buffer within a Minecraft world.
@@ -104,81 +104,166 @@ export default class Buffer {
     }
 
     /**
-     * Reads a byte from the shulker box at the specified offset.
+     * Reads a unsigned byte from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
-     * @param {*} twosComplement Whether the value should be read as a twos-complement value.
-     * @returns The byte read from the shulker box.
+     * @returns The unsigned byte read from the shulker box.
      */
-    readByte({ offset = this.#offset, twosComplement = false } = {}) {
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+    readUByte(offset = this.#offset) {
+        if (arguments.length > 0) {
             this.#offset = offset;
         }
 
         let value = this.#read(offset);
         this.#offset += 1;
-        return twosComplement ? this.#twosComplement(value, 8) : value;
+        return (value < 0) ? value + Math.pow(2, 8) : value;
+    }
+
+    /**
+     * Reads a byte from the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to read from.
+     * @returns The byte read from the shulker box.
+     */
+    readByte(offset = this.#offset) {
+        if (arguments.length > 0) {
+            this.#offset = offset;
+        }
+
+        let value = this.#read(offset);
+        this.#offset += 1;
+        return value;
+    }
+
+    /**
+     * Reads a unsigned short from the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to read from.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @returns The unsigned short read from the shulker box.
+     */
+    readUShort({ offset = this.#offset, littleEndian = false } = {}) {
+        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        let value = littleEndian
+            ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8)
+            : ((this.#read(offset) & 0xFF) << 8) | (this.#read(offset + 1) & 0xFF);
+
+        this.#offset += 2;
+        return (value < 0) ? value + Math.pow(2, 16) : value;
     }
 
     /**
      * Reads a short from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
-     * @param {*} twosComplement Whether the value should be read as a twos-complement value.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
      * @returns The short read from the shulker box.
      */
-    readShort({ offset = this.#offset, twosComplement = false } = {}) {
+    readShort({ offset = this.#offset, littleEndian = false } = {}) {
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
-        let value = ((this.#read(offset) & 0xFF) << 8) | (this.#read(offset + 1) & 0xFF);
+        let value = littleEndian
+            ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8)
+            : ((this.#read(offset) & 0xFF) << 8) | (this.#read(offset + 1) & 0xFF);
+
         this.#offset += 2;
-        return twosComplement ? this.#twosComplement(value, 16) : value;
+        return value;
+    }
+
+    /**
+     * Reads a unsigned integer from the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to read from.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @returns The unsigned integer read from the shulker box.
+     */
+    readUInt({ offset = this.#offset, littleEndian = false } = {}) {
+        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        let value = littleEndian
+            ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24)
+            : ((this.#read(offset) & 0xFF) << 24) | ((this.#read(offset + 1) & 0xFF) << 16) | ((this.#read(offset + 2) & 0xFF) << 8) | (this.#read(offset + 3) & 0xFF);
+
+        this.#offset += 4;
+        return (value < 0) ? value + Math.pow(2, 32) : value;
     }
 
     /**
      * Reads a integer from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
-     * @param {*} twosComplement Whether the value should be read as a twos-complement value.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
      * @returns The integer read from the shulker box.
      */
-    readInt({ offset = this.#offset, twosComplement = false } = {}) {
+    readInt({ offset = this.#offset, littleEndian = false } = {}) {
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
-        let value = ((this.#read(offset) & 0xFF) << 24) | ((this.#read(offset + 1) & 0xFF) << 16) | ((this.#read(offset + 2) & 0xFF) << 8) | (this.#read(offset + 3) & 0xFF);
+        let value = littleEndian
+            ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24)
+            : ((this.#read(offset) & 0xFF) << 24) | ((this.#read(offset + 1) & 0xFF) << 16) | ((this.#read(offset + 2) & 0xFF) << 8) | (this.#read(offset + 3) & 0xFF);
+
         this.#offset += 4;
-        return twosComplement ? this.#twosComplement(value, 32) : value;
+        return value;
+    }
+
+    /**
+     * Reads a unsigned long from the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to read from.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @returns The unsigned long read from the shulker box.
+     */
+    readULong({ offset = this.#offset, littleEndian = false } = {}) {
+        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        let value = littleEndian
+            ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24) | ((this.#read(offset + 4) & 0xFF) << 32) | ((this.#read(offset + 5) & 0xFF) << 40) | ((this.#read(offset + 6) & 0xFF) << 48) | ((this.#read(offset + 7) & 0xFF) << 56)
+            : ((this.#read(offset) & 0xFF) << 56) | ((this.#read(offset + 1) & 0xFF) << 48) | ((this.#read(offset + 2) & 0xFF) << 40) | ((this.#read(offset + 3) & 0xFF) << 32) | ((this.#read(offset + 4) & 0xFF) << 24) | ((this.#read(offset + 5) & 0xFF) << 16) | ((this.#read(offset + 6) & 0xFF) << 8) | (this.#read(offset + 7) & 0xFF);
+
+        this.#offset += 8;
+        return (value < 0) ? value + Math.pow(2, 64) : value;
     }
 
     /**
      * Reads a long from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
-     * @param {*} twosComplement Whether the value should be read as a twos-complement value.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
      * @returns The long read from the shulker box.
      */
-    readLong({ offset = this.#offset, twosComplement = false } = {}) {
+    readLong({ offset = this.#offset, littleEndian = false } = {}) {
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
-        let value = ((this.#read(offset) & 0xFF) << 56) | ((this.#read(offset + 1) & 0xFF) << 48) | ((this.#read(offset + 2) & 0xFF) << 40) | ((this.#read(offset + 3) & 0xFF) << 32) | ((this.#read(offset + 4) & 0xFF) << 24) | ((this.#read(offset + 5) & 0xFF) << 16) | ((this.#read(offset + 6) & 0xFF) << 8) | (this.#read(offset + 7) & 0xFF);
+        let value = littleEndian
+            ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24) | ((this.#read(offset + 4) & 0xFF) << 32) | ((this.#read(offset + 5) & 0xFF) << 40) | ((this.#read(offset + 6) & 0xFF) << 48) | ((this.#read(offset + 7) & 0xFF) << 56)
+            : ((this.#read(offset) & 0xFF) << 56) | ((this.#read(offset + 1) & 0xFF) << 48) | ((this.#read(offset + 2) & 0xFF) << 40) | ((this.#read(offset + 3) & 0xFF) << 32) | ((this.#read(offset + 4) & 0xFF) << 24) | ((this.#read(offset + 5) & 0xFF) << 16) | ((this.#read(offset + 6) & 0xFF) << 8) | (this.#read(offset + 7) & 0xFF);
+
         this.#offset += 8;
-        return twosComplement ? this.#twosComplement(value, 64) : value;
+        return value;
     }
 
     /**
      * Reads a float from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
      * @returns The float read from the shulker box.
      */
-    readFloat(offset = this.#offset) {
-        if (arguments.length > 1) {
+    readFloat({ offset = this.#offset, littleEndian = false } = {}) {
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
@@ -191,16 +276,17 @@ export default class Buffer {
         view.setUint8(3, this.#read(offset + 3));
 
         this.#offset += 4;
-        return view.getFloat32(0, false);
+        return view.getFloat32(0, littleEndian);
     }
 
     /**
      * Reads a double from the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to read from.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value.
      * @returns The double read from the shulker box.
      */
-    readDouble(offset = this.#offset) {
+    readDouble({ offset = this.#offset, littleEndian = false } = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -218,7 +304,7 @@ export default class Buffer {
         view.setUint8(7, this.#read(offset + 7));
 
         this.#offset += 8;
-        return view.getFloat64(0, false);
+        return view.getFloat64(0, littleEndian);
     }
 
     /**
@@ -226,14 +312,15 @@ export default class Buffer {
      *
      * @param {*} offset The offset of the shulker box to read from.
      * @param {*} charSet The character set of the string.
+     * @param {*} littleEndian Whether the value should be read as a little-endian value. (Only applicable for UTF-16)
      * @returns The string read from the shulker box.
      */
-    readString({ offset = this.#offset, charSet = CharSets.UTF8 } = {}) {
+    readString({ offset = this.#offset, charSet = CharSets.UTF8, littleEndian = false } = {}) {
         if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        let length = this.readShort({offset});
+        let length = this.readUShort({offset, littleEndian});
         offset += 2;
 
         let strBytes = [];
@@ -242,7 +329,7 @@ export default class Buffer {
         }
 
         let encoder = new Encoder(charSet);
-        let value = encoder.decode(strBytes);
+        let value = encoder.decode(strBytes, littleEndian);
 
         this.#offset += value.length;
         return value;
@@ -264,12 +351,36 @@ export default class Buffer {
     }
 
     /**
+     * Writes a unsigned byte to the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The unsigned byte to write to the shulker box.
+     */
+    writeUByte({offset = this.#offset, value} = {}) {
+        if (value < 0 || value > 255) {
+            throw new Error(`Invaild value for type: unsigned byte. Value must be between 0 and 255. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        let byte = (value & 0xFF);
+        this.#write({offset, value: byte});
+        this.#offset += 1;
+    }
+
+    /**
      * Writes a byte to the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The byte to write to the shulker box.
      */
     writeByte({offset = this.#offset, value} = {}) {
+        if (value < -128 || value > 127) {
+            throw new Error(`Invaild value for type: byte. Value must be between -128 and 127. Got: ${value}`);
+        }
+
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -280,21 +391,81 @@ export default class Buffer {
     }
 
     /**
-     * Writes a short to the shulker box at the specified offset.
+     * Writes a unsigned short to the shulker box at the specified offset.
      *
      * @param {*} offset The offset of the shulker box to write to.
-     * @param {*} value The short to write to the shulker box.
+     * @param {*} value The unsigned short to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
-    writeShort({offset = this.#offset, value} = {}) {
-        if (arguments.length > 1) {
+    writeUShort({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < 0 || value > 65_535) {
+            throw new Error(`Invaild value for type: unsigned short. Value must be between 0 and 65,535. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
         for (let i = 0; i < 2; i++) {
-            let byte = ((value >> ((1 - i) * 8)) & 0xFF);
+            let byte = littleEndian
+                ? ((value >> (i * 8)) & 0xFF)
+                : ((value >> ((1 - i) * 8)) & 0xFF);
+
             this.#write({offset: (offset + i), value: byte});
         }
         this.#offset += 2;
+    }
+
+    /**
+     * Writes a short to the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The short to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     */
+    writeShort({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < -32_768 || value > 32_767) {
+            throw new Error(`Invaild value for type: short. Value must be between -32,768 and 32,767. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        for (let i = 0; i < 2; i++) {
+            let byte = littleEndian
+                ? ((value >> (i * 8)) & 0xFF)
+                : ((value >> ((1 - i) * 8)) & 0xFF);
+
+            this.#write({offset: (offset + i), value: byte});
+        }
+        this.#offset += 2;
+    }
+
+    /**
+     * Writes a unsigned integer to the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The unsigned integer to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     */
+    writeUInt({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < 0 || value > 4_294_967_295) {
+            throw new Error(`Invaild value for type: unsigned int. Value must be between 0 and 4,294,967,295. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        for (let i = 0; i < 4; i++) {
+            let byte = littleEndian
+                ? ((value >> (i * 8)) & 0xFF)
+                : ((value >> ((3 - i) * 8)) & 0xFF);
+
+            this.#write({offset: (offset + i), value: byte});
+        }
+        this.#offset += 4;
     }
 
     /**
@@ -302,17 +473,51 @@ export default class Buffer {
      *
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The integer to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
-    writeInt({offset = this.#offset, value} = {}) {
+    writeInt({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < -2_147_483_648 || value > 2_147_483_647) {
+            throw new Error(`Invaild value for type: int. Value must be between -2,147,483,648 and 2,147,483,647. Got: ${value}`);
+        }
+
         if (arguments.length > 1) {
             this.#offset = offset;
         }
 
         for (let i = 0; i < 4; i++) {
-            let byte = ((value >> ((3 - i) * 8)) & 0xFF);
+            let byte = littleEndian
+                ? ((value >> (i * 8)) & 0xFF)
+                : ((value >> ((3 - i) * 8)) & 0xFF);
+
             this.#write({offset: (offset + i), value: byte});
         }
         this.#offset += 4;
+    }
+
+    /**
+     * Writes a unsigned long to the shulker box at the specified offset.
+     *
+     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The unsigned long to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     */
+    writeULong({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < 0 || value > 18_446_744_073_709_551_615n) {
+            throw new Error(`Invaild value for type: unsigned long. Value must be between 0 and 18,446,744,073,709,551,615. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+            this.#offset = offset;
+        }
+
+        for (let i = 0; i < 8; i++) {
+            let byte = littleEndian
+                ? ((value >> (i * 8)) & 0xFF)
+                : ((value >> ((7 - i) * 8)) & 0xFF);
+
+            this.#write({offset: (offset + i), value: byte});
+        }
+        this.#offset += 8;
     }
 
     /**
@@ -320,14 +525,22 @@ export default class Buffer {
      *
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The long to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
-    writeLong({offset = this.#offset, value} = {}) {
-        if (arguments.length > 1) {
+    writeLong({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < -9_223_372_036_854_775_808n || value > 9_223_372_036_854_775_807n) {
+            throw new Error(`Invaild value for type: long. Value must be between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
         for (let i = 0; i < 8; i++) {
-            let byte = ((value >> ((7 - i) * 8)) & 0xFF);
+            let byte = littleEndian
+                ? ((value >> (i * 8)) & 0xFF)
+                : ((value >> ((7 - i) * 8)) & 0xFF);
+
             this.#write({offset: (offset + i), value: byte});
         }
         this.#offset += 8;
@@ -338,16 +551,21 @@ export default class Buffer {
      *
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The float to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
-    writeFloat({offset = this.#offset, value} = {}) {
-        if (arguments.length > 1) {
+    writeFloat({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < (1.4 * Math.pow(10, -45)) || value > (3.4 * Math.pow(10, 38))) {
+            throw new Error(`Invaild value for type: float. Value must be between ${1.4 * Math.pow(10, -45)} and ${3.4 * Math.pow(10, 38)}. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
         const buffer = new ArrayBuffer(4);
         const view = new DataView(buffer);
 
-        view.setFloat32(0, value, false);
+        view.setFloat32(0, value, littleEndian);
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
@@ -361,16 +579,21 @@ export default class Buffer {
      *
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The double to write to the shulker box.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
-    writeDouble({offset = this.#offset, value} = {}) {
-        if (arguments.length > 1) {
+    writeDouble({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (value < (4.9 * Math.pow(10, -324)) || value > (1.8 * Math.pow(10, 308))) {
+            throw new Error(`Invaild value for type: double. Value must be between ${4.9 * Math.pow(10, -324)} and ${1.8 * Math.pow(10, 308)}. Got: ${value}`);
+        }
+
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
         const buffer = new ArrayBuffer(8);
         const view = new DataView(buffer);
 
-        view.setFloat64(0, value, false);
+        view.setFloat64(0, value, littleEndian);
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
@@ -385,14 +608,15 @@ export default class Buffer {
      * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The string to write to the shulker box.
      * @param {*} charSet The character set of the string.
+     * @param {*} littleEndian Whether the value should be written as a little-endian value. (Only applicable for UTF-16)
      */
-    writeString({ offset = this.#offset, value, charSet = CharSets.UTF8 } = {}) {
-        if (arguments.length > 1) {
+    writeString({ offset = this.#offset, value, charSet = CharSets.UTF8, littleEndian = false } = {}) {
+        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
 
         let encoder = new Encoder(charSet);
-        let bytes = encoder.encode(value);
+        let bytes = encoder.encode(value, littleEndian);
 
         for (let i = 0; i < bytes.length; i++) {
             this.#write({offset: (offset + i), value: bytes[i]});
@@ -423,6 +647,8 @@ export default class Buffer {
                 return dataSlot.amount + 128;
             case "minecraft:black_stained_glass":
                 return dataSlot.amount + 192;
+            default:
+                throw new Error("Unknown data item type: " + dataSlot.typeId);
         }
     }
 
@@ -449,14 +675,5 @@ export default class Buffer {
         }
 
         dataBlock.getComponent("inventory").container.setItem(blockSlot, itemStack);
-    }
-
-    #twosComplement(value, bitCount) {
-        let mask = 2 ** bitCount;
-
-        if (value & (mask >> 1)) {
-            return value - mask;
-        }
-        return value;
     }
 }
