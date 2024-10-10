@@ -1,4 +1,4 @@
-import { BlockVolume, system, world } from "@minecraft/server"
+import { system, world } from "@minecraft/server"
 import Buffer from "./buffer.js"
 
 let read = false;
@@ -30,17 +30,17 @@ system.runInterval(() => {
         read = false;
     }
     if (write) {
-        writeFileTest();
+        writeFile();
         write = false;
     }
     if (clear) {
-        world.getDimension("minecraft:overworld").fillBlocks(new BlockVolume({x:0, y:-64, z:0}, {x:47, y:-64, z:47}), "minecraft:air");
+        clearFile();
         clear = false;
     }
 }, 40);
 
-function writeFileTest() {
-    let buffer = new Buffer("minecraft:overworld");
+function writeFile() {
+    let buffer = new Buffer();
 
     let locations = [{x:5, y:-64, z:4}, {x:5, y:-64, z:5}];
 
@@ -55,7 +55,7 @@ function writeFileTest() {
 }
 
 function parseFile() {
-    let buffer = new Buffer("minecraft:overworld");
+    let buffer = new Buffer();
 
     let header = buffer.readByte();
 
@@ -79,4 +79,9 @@ function parseFile() {
     for (let i = 0; i < locations.length; i++) {
         console.warn("["+locations[i].x+","+locations[i].y+","+locations[i].z+"]");
     }
+}
+
+function clearFile() {
+    let buffer = new Buffer();
+    buffer.clear();
 }

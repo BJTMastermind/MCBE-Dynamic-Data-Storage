@@ -1,6 +1,6 @@
-import { BlockVolume, ItemStack, world } from "@minecraft/server";
+import { BlockVolume, DimensionTypes, ItemStack, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
-import { CharSets } from "./enums/charsets.js";
+import { CharSets } from "./utils/charsets.js";
 
 /**
  * A class for parsing and writing binary data to and from a multi-shulker box based buffer within a Minecraft world.
@@ -8,26 +8,32 @@ import { CharSets } from "./enums/charsets.js";
 export default class Buffer {
     static #MAX_SIZE = 48*48*27;
     #offset = 0;
-    #dimension; // Currently unused
+    #dimensionMinY = -64;
+    #dimension;
 
-    constructor(dimension) {
-        if (dimension === undefined) {
-            console.error("Dimension must be specified.");
-            return;
+    constructor(dimension = "minecraft:overworld") {
+        if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
+            throw new Error(`"${dimension}" is not a valid dimension.`);
         }
 
-        if (dimension in ["minecraft:overworld", "minecraft:nether", "minecraft:the_end"]) {
-            this.#dimension = dimension;
+        if (dimension == "minecraft:the_end") {
+            throw new Error(`"${dimension}" is not a supported dimension.`);
         }
+
+        if (dimension != "minecraft:overworld") {
+            this.#dimensionMinY = 0;
+        }
+
+        this.#dimension = dimension;
 
         // Check if data storage area has been initialized, if not, initialize it.
-        let checkDimension = world.getDimension("minecraft:overworld");
-        let checkBlock = checkDimension.getBlock({x:0, y:-64, z:0});
+        let checkDimension = world.getDimension(this.#dimension);
+        let checkBlock = checkDimension.getBlock({x:0, y:this.#dimensionMinY, z:0});
 
         if (checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:light_gray_shulker_box") {
-            checkDimension.runCommand("tickingarea add 0 -64 0 47 -64 47 \"dynamic-data-storage-area\" true");
-            checkDimension.fillBlocks(new BlockVolume({x:0, y:-64, z:0}, {x:47, y:-64, z:47}), "minecraft:air");
-            checkDimension.fillBlocks(new BlockVolume({x:0, y:-63, z:0}, {x:47, y:-63, z:47}), "minecraft:bedrock");
+            checkDimension.runCommand(`tickingarea add 0 ${this.#dimensionMinY} 0 47 ${this.#dimensionMinY} 47 \"dynamic-data-storage-area\" true`);
+            checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
+            checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY + 1, z:0}, {x:47, y:this.#dimensionMinY + 1, z:47}), "minecraft:bedrock");
         }
     }
 
@@ -44,8 +50,17 @@ export default class Buffer {
      * Clears all of the buffers of data.
      */
     clear() {
-        world.getDimension("minecraft:overworld").fillBlocks(new BlockVolume({x:0, y:-64, z:0}, {x:47, y:-64, z:47}), "minecraft:air");
+        world.getDimension(this.#dimension).fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
         this.#offset = 0;
+    }
+
+    /**
+     * Returns the dimension the buffer was created for.
+     *
+     * @returns The dimension the buffer was created for.
+     */
+    getDimension() {
+        return this.#dimension;
     }
 
     /**
@@ -627,7 +642,7 @@ export default class Buffer {
     #read(offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
-        let dataBlock = world.getDimension("overworld").getBlock({x:blockX, y:-64, z:blockZ});
+        let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
         if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
             console.warn("Offset out of bounds. Nothing to read at: " + offset);
@@ -655,10 +670,10 @@ export default class Buffer {
     #write({offset = this.#offset, value} = {}) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
-        let dataBlock = world.getDimension("minecraft:overworld").getBlock({x:blockX, y:-64, z:blockZ});
+        let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
         if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
-            world.getDimension("minecraft:overworld").runCommand(`structure load "dynamic_data_storage/empty_upside_down_shulker_box" ${blockX} -64 ${blockZ}`);
+            world.getDimension(this.#dimension).runCommand(`structure load "dynamic_data_storage/empty_upside_down_shulker_box" ${blockX} ${this.#dimensionMinY} ${blockZ}`);
         }
 
         let itemStack;
