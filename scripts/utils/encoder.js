@@ -1,4 +1,4 @@
-import { CharSets } from "../enums/charsets.js"
+import { CharSets } from "./charsets.js"
 
 /**
  * A class for encoding and decoding strings to and from byte arrays.
