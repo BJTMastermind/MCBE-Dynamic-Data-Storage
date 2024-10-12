@@ -98,6 +98,10 @@ export default class Buffer {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
+        if (saveName.trim() == "") {
+            throw new Error("save name can't be blank");
+        }
+
         world.structureManager.delete(`dynamic_data_storage_file:${saveName}`);
     }
 
@@ -166,6 +170,10 @@ export default class Buffer {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
+        if (saveName.trim() == "") {
+            throw new Error("save name can't be blank");
+        }
+
         let structureIds = world.structureManager.getWorldStructureIds();
 
         let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
@@ -213,6 +221,10 @@ export default class Buffer {
 
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        if (saveName.trim() == "") {
+            throw new Error("save name can't be blank");
         }
 
         let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
@@ -291,16 +303,16 @@ export default class Buffer {
     /**
      * Reads a unsigned short from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The unsigned short read from the shulker box.
      */
-    readUShort({ offset = this.#offset, littleEndian = false } = {}) {
+    readUShort(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -315,16 +327,16 @@ export default class Buffer {
     /**
      * Reads a short from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The short read from the shulker box.
      */
-    readShort({ offset = this.#offset, littleEndian = false } = {}) {
+    readShort(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -339,16 +351,16 @@ export default class Buffer {
     /**
      * Reads a unsigned integer from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The unsigned integer read from the shulker box.
      */
-    readUInt({ offset = this.#offset, littleEndian = false } = {}) {
+    readUInt(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -363,16 +375,16 @@ export default class Buffer {
     /**
      * Reads a integer from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The integer read from the shulker box.
      */
-    readInt({ offset = this.#offset, littleEndian = false } = {}) {
+    readInt(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -387,16 +399,16 @@ export default class Buffer {
     /**
      * Reads a unsigned long from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The unsigned long read from the shulker box.
      */
-    readULong({ offset = this.#offset, littleEndian = false } = {}) {
+    readULong(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -411,16 +423,16 @@ export default class Buffer {
     /**
      * Reads a long from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The long read from the shulker box.
      */
-    readLong({ offset = this.#offset, littleEndian = false } = {}) {
+    readLong(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -435,16 +447,16 @@ export default class Buffer {
     /**
      * Reads a float from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The float read from the shulker box.
      */
-    readFloat({ offset = this.#offset, littleEndian = false } = {}) {
+    readFloat(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
@@ -463,11 +475,11 @@ export default class Buffer {
     /**
      * Reads a double from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The double read from the shulker box.
      */
-    readDouble({ offset = this.#offset, littleEndian = false } = {}) {
+    readDouble(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -495,17 +507,17 @@ export default class Buffer {
     /**
      * Reads a string from the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
      * @param {*} charSet The character set of the string.
      * @param {*} littleEndian Whether the value should be read as a little-endian value. (Only applicable for UTF-16)
+     * @param {*} offset The offset of the shulker box to read from.
      * @returns The string read from the shulker box.
      */
-    readString({ offset = this.#offset, charSet = CharSets.UTF8, littleEndian = false } = {}) {
+    readString(charSet = CharSets.UTF8, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 1) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -527,10 +539,10 @@ export default class Buffer {
     /**
      * Writes a boolean to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The boolean to write to the shulker box.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeBoolean({offset = this.#offset, value} = {}) {
+    writeBoolean(value, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -539,17 +551,17 @@ export default class Buffer {
             this.#offset = offset;
         }
 
-        this.#write({offset, value: (value & 0xFF) ? 1 : 0});
+        this.#write((value & 0xFF) ? 1 : 0, offset);
         this.#offset += 1;
     }
 
     /**
      * Writes a unsigned byte to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The unsigned byte to write to the shulker box.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeUByte({offset = this.#offset, value} = {}) {
+    writeUByte(value, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -558,22 +570,22 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned byte. Value must be between 0 and 255. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 1) {
             this.#offset = offset;
         }
 
         let byte = (value & 0xFF);
-        this.#write({offset, value: byte});
+        this.#write(byte, offset);
         this.#offset += 1;
     }
 
     /**
      * Writes a byte to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The byte to write to the shulker box.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeByte({offset = this.#offset, value} = {}) {
+    writeByte(value, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -587,18 +599,18 @@ export default class Buffer {
         }
 
         let byte = (value & 0xFF);
-        this.#write({offset, value: byte});
+        this.#write(byte, offset);
         this.#offset += 1;
     }
 
     /**
      * Writes a unsigned short to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The unsigned short to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeUShort({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeUShort(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -607,7 +619,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned short. Value must be between 0 and 65,535. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -616,7 +628,7 @@ export default class Buffer {
                 ? ((value >> (i * 8)) & 0xFF)
                 : ((value >> ((1 - i) * 8)) & 0xFF);
 
-            this.#write({offset: (offset + i), value: byte});
+            this.#write(byte, offset + i);
         }
         this.#offset += 2;
     }
@@ -624,11 +636,11 @@ export default class Buffer {
     /**
      * Writes a short to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The short to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeShort({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeShort(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -637,7 +649,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: short. Value must be between -32,768 and 32,767. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -646,7 +658,7 @@ export default class Buffer {
                 ? ((value >> (i * 8)) & 0xFF)
                 : ((value >> ((1 - i) * 8)) & 0xFF);
 
-            this.#write({offset: (offset + i), value: byte});
+            this.#write(byte, offset + i);
         }
         this.#offset += 2;
     }
@@ -654,11 +666,11 @@ export default class Buffer {
     /**
      * Writes a unsigned integer to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The unsigned integer to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeUInt({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeUInt(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -667,7 +679,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned int. Value must be between 0 and 4,294,967,295. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -676,7 +688,7 @@ export default class Buffer {
                 ? ((value >> (i * 8)) & 0xFF)
                 : ((value >> ((3 - i) * 8)) & 0xFF);
 
-            this.#write({offset: (offset + i), value: byte});
+            this.#write(byte, offset + i);
         }
         this.#offset += 4;
     }
@@ -684,11 +696,11 @@ export default class Buffer {
     /**
      * Writes a integer to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The integer to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeInt({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeInt(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -697,7 +709,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: int. Value must be between -2,147,483,648 and 2,147,483,647. Got: ${value}`);
         }
 
-        if (arguments.length > 1) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -706,7 +718,7 @@ export default class Buffer {
                 ? ((value >> (i * 8)) & 0xFF)
                 : ((value >> ((3 - i) * 8)) & 0xFF);
 
-            this.#write({offset: (offset + i), value: byte});
+            this.#write(byte, offset + i);
         }
         this.#offset += 4;
     }
@@ -714,11 +726,11 @@ export default class Buffer {
     /**
      * Writes a unsigned long to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The unsigned long to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeULong({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeULong(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -727,7 +739,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned long. Value must be between 0 and 18,446,744,073,709,551,615. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -736,7 +748,7 @@ export default class Buffer {
                 ? ((value >> (i * 8)) & 0xFF)
                 : ((value >> ((7 - i) * 8)) & 0xFF);
 
-            this.#write({offset: (offset + i), value: byte});
+            this.#write(byte, offset + i);
         }
         this.#offset += 8;
     }
@@ -744,11 +756,11 @@ export default class Buffer {
     /**
      * Writes a long to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The long to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeLong({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeLong(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -757,7 +769,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: long. Value must be between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -766,7 +778,7 @@ export default class Buffer {
                 ? ((value >> (i * 8)) & 0xFF)
                 : ((value >> ((7 - i) * 8)) & 0xFF);
 
-            this.#write({offset: (offset + i), value: byte});
+            this.#write(byte, offset + i);
         }
         this.#offset += 8;
     }
@@ -774,11 +786,11 @@ export default class Buffer {
     /**
      * Writes a float to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The float to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeFloat({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeFloat(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -787,7 +799,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: float. Value must be between ${1.4 * Math.pow(10, -45)} and ${3.4 * Math.pow(10, 38)}. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -798,7 +810,7 @@ export default class Buffer {
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write({offset: (offset + i), value: bytes[i]});
+            this.#write(bytes[i], offset + i);
         }
         this.#offset += 4;
     }
@@ -806,11 +818,11 @@ export default class Buffer {
     /**
      * Writes a double to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The double to write to the shulker box.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeDouble({offset = this.#offset, value, littleEndian = false} = {}) {
+    writeDouble(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
@@ -819,7 +831,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: double. Value must be between ${4.9 * Math.pow(10, -324)} and ${1.8 * Math.pow(10, 308)}. Got: ${value}`);
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 2) {
             this.#offset = offset;
         }
 
@@ -830,7 +842,7 @@ export default class Buffer {
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write({offset: (offset + i), value: bytes[i]});
+            this.#write(bytes[i], offset + i);
         }
         this.#offset += 8;
     }
@@ -838,17 +850,17 @@ export default class Buffer {
     /**
      * Writes a string to the shulker box at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to write to.
      * @param {*} value The string to write to the shulker box.
      * @param {*} charSet The character set of the string.
      * @param {*} littleEndian Whether the value should be written as a little-endian value. (Only applicable for UTF-16)
+     * @param {*} offset The offset of the shulker box to write to.
      */
-    writeString({ offset = this.#offset, value, charSet = CharSets.UTF8, littleEndian = false } = {}) {
+    writeString(value, charSet = CharSets.UTF8, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
+        if (arguments.length > 3) {
             this.#offset = offset;
         }
 
@@ -856,7 +868,7 @@ export default class Buffer {
         let bytes = encoder.encode(value, littleEndian);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write({offset: (offset + i), value: bytes[i]});
+            this.#write(bytes[i], offset + i);
         }
         this.#offset += bytes.length;
     }
@@ -889,7 +901,7 @@ export default class Buffer {
         }
     }
 
-    #write({offset = this.#offset, value} = {}) {
+    #write(value, offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
         let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
