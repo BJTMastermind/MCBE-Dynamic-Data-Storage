@@ -1,4 +1,4 @@
-import { BlockVolume, DimensionTypes, ItemStack, world } from "@minecraft/server";
+import { BlockPermutation, BlockVolume, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
@@ -7,11 +7,13 @@ import { CharSets } from "./utils/charsets.js";
  */
 export default class Buffer {
     static #MAX_SIZE = 48*48*27;
+    #useExperimental;
+    #isClosed = false;
     #offset = 0;
     #dimensionMinY = -64;
     #dimension;
 
-    constructor(dimension = "minecraft:overworld") {
+    constructor({ dimension = "minecraft:overworld", useExperimental = false } = {}) {
         if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
             throw new Error(`"${dimension}" is not a valid dimension.`);
         }
@@ -20,11 +22,10 @@ export default class Buffer {
             throw new Error(`"${dimension}" is not a supported dimension.`);
         }
 
-        if (dimension != "minecraft:overworld") {
-            this.#dimensionMinY = 0;
-        }
+        this.#dimensionMinY = world.getDimension(dimension).heightRange.min;
 
         this.#dimension = dimension;
+        this.#useExperimental = useExperimental;
 
         // Check if data storage area has been initialized, if not, initialize it.
         let checkDimension = world.getDimension(this.#dimension);
@@ -47,11 +48,57 @@ export default class Buffer {
     }
 
     /**
-     * Clears all of the buffers of data.
+     * Clears all of the buffers data and resets the current offset to 0.
      */
     clear() {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         world.getDimension(this.#dimension).fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
         this.#offset = 0;
+    }
+
+    /**
+     * Closes the buffer.
+     *
+     * @experimental This is an experimental feature and is not guaranteed to stay.
+     */
+    close() {
+        if (!this.#useExperimental) {
+            throw new Error("useExperimental was not enabled when buffer instance was created.");
+        }
+
+        if (this.#isClosed) {
+            throw new Error("Buffer is already closed!");
+        }
+
+        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
+        if (blocks.getCapacity() == 0) {
+            console.warn("Buffer is already closed!");
+            return;
+        }
+
+        world.getDimension(this.#dimension).fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
+        this.#isClosed = true;
+    }
+
+    /**
+     * Deletes the saved buffer from the world data.
+     *
+     * @param {*} saveName The name of the saved buffer to delete.
+     * @experimental This is an experimental feature and is not guaranteed to stay.
+     */
+    delete(saveName) {
+        if (!this.#useExperimental) {
+            throw new Error("useExperimental was not enabled when buffer instance was created.");
+        }
+
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        world.structureManager.delete(`dynamic_data_storage_file:${saveName}`);
     }
 
     /**
@@ -60,6 +107,10 @@ export default class Buffer {
      * @returns The dimension the buffer was created for.
      */
     getDimension() {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         return this.#dimension;
     }
 
@@ -69,6 +120,10 @@ export default class Buffer {
      * @returns The offset of the buffer.
      */
     getOffset() {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         return this.#offset;
     }
 
@@ -79,6 +134,10 @@ export default class Buffer {
      * @returns The offset of the buffer in the form of `[x, z, slot]`.
      */
     getOffsetLocation(offset = this.#offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         let blockOffset = Math.floor(offset / 27);
 
         let blockX = Math.floor(blockOffset / 48);
@@ -90,16 +149,83 @@ export default class Buffer {
     }
 
     /**
+     * Saves the buffer to the world data so i can be loaded again later. (Doesn't close the buffer)
+     *
+     * @param {*} saveName The name for the buffer to be save as.
+     * @param {*} override Whether to override an existing buffer with the same name. (Default: false)
+     *
+     * @throws Error if buffer is empty.
+     * @experimental This is an experimental feature and is not guaranteed to stay.
+     */
+    save(saveName, override = false) {
+        if (!this.#useExperimental) {
+            throw new Error("useExperimental was not enabled when buffer instance was created.");
+        }
+
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        let structureIds = world.structureManager.getWorldStructureIds();
+
+        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
+        if (blocks.getCapacity() == 0) {
+            throw Error("Aborting saving, buffer is empty!");
+        }
+
+        if (structureIds.includes(`dynamic_data_storage_file:${saveName}`) && !override) {
+            console.warn(`A buffer with the name ${saveName} already exists! Set override argument to true to override the existing buffer.`);
+            return;
+        }
+
+        world.structureManager.createFromWorld(`dynamic_data_storage_file:${saveName}`, this.#dimension, {x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}, {saveMode: StructureSaveMode.World, includeEntities: false});
+    }
+
+    /**
      * Changes the buffers reading position to the specified offset.
      *
      * @param {*} offset The new offset location.
      */
     setOffset(offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (offset < 0 && offset > MAX_SIZE) {
             console.error("Invalid offset. Must be between 0 and " + MAX_SIZE);
             return;
         }
         this.#offset = offset;
+    }
+
+    /**
+     * Loads a saved buffer from the world data.
+     *
+     * @param {*} saveName The name of the saved buffer to load.
+     *
+     * @throws `Error` if another buffer is already loaded or `saveName` doesn't exist.
+     * @experimental This is an experimental feature and is not guaranteed to stay.
+     */
+    load(saveName) {
+        if (!this.#useExperimental) {
+            throw new Error("useExperimental was not enabled when buffer instance was created.");
+        }
+
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
+        if (blocks.getCapacity() > 0) {
+            throw Error("Aborting loading, another buffer is loaded!");
+        }
+
+        let structureIds = world.structureManager.getWorldStructureIds();
+        if (!structureIds.includes(`dynamic_data_storage_file:${saveName}`)) {
+            throw Error(`${saveName} does not exist!`);
+        }
+
+        world.structureManager.place(`dynamic_data_storage_file:${saveName}`, this.#dimension, {x:0, y:this.#dimensionMinY, z:0});
     }
 
     /**
@@ -109,6 +235,10 @@ export default class Buffer {
      * @returns The boolean read from the shulker box.
      */
     readBoolean(offset = this.#offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0) {
             this.#offset = offset;
         }
@@ -125,6 +255,10 @@ export default class Buffer {
      * @returns The unsigned byte read from the shulker box.
      */
     readUByte(offset = this.#offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0) {
             this.#offset = offset;
         }
@@ -141,6 +275,10 @@ export default class Buffer {
      * @returns The byte read from the shulker box.
      */
     readByte(offset = this.#offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0) {
             this.#offset = offset;
         }
@@ -158,6 +296,10 @@ export default class Buffer {
      * @returns The unsigned short read from the shulker box.
      */
     readUShort({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -178,6 +320,10 @@ export default class Buffer {
      * @returns The short read from the shulker box.
      */
     readShort({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -198,6 +344,10 @@ export default class Buffer {
      * @returns The unsigned integer read from the shulker box.
      */
     readUInt({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -218,6 +368,10 @@ export default class Buffer {
      * @returns The integer read from the shulker box.
      */
     readInt({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -238,6 +392,10 @@ export default class Buffer {
      * @returns The unsigned long read from the shulker box.
      */
     readULong({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -258,6 +416,10 @@ export default class Buffer {
      * @returns The long read from the shulker box.
      */
     readLong({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 0 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -278,6 +440,10 @@ export default class Buffer {
      * @returns The float read from the shulker box.
      */
     readFloat({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
@@ -302,6 +468,10 @@ export default class Buffer {
      * @returns The double read from the shulker box.
      */
     readDouble({ offset = this.#offset, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -331,6 +501,10 @@ export default class Buffer {
      * @returns The string read from the shulker box.
      */
     readString({ offset = this.#offset, charSet = CharSets.UTF8, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -357,6 +531,10 @@ export default class Buffer {
      * @param {*} value The boolean to write to the shulker box.
      */
     writeBoolean({offset = this.#offset, value} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 1) {
             this.#offset = offset;
         }
@@ -372,6 +550,10 @@ export default class Buffer {
      * @param {*} value The unsigned byte to write to the shulker box.
      */
     writeUByte({offset = this.#offset, value} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < 0 || value > 255) {
             throw new Error(`Invaild value for type: unsigned byte. Value must be between 0 and 255. Got: ${value}`);
         }
@@ -392,6 +574,10 @@ export default class Buffer {
      * @param {*} value The byte to write to the shulker box.
      */
     writeByte({offset = this.#offset, value} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < -128 || value > 127) {
             throw new Error(`Invaild value for type: byte. Value must be between -128 and 127. Got: ${value}`);
         }
@@ -413,6 +599,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeUShort({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < 0 || value > 65_535) {
             throw new Error(`Invaild value for type: unsigned short. Value must be between 0 and 65,535. Got: ${value}`);
         }
@@ -439,6 +629,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeShort({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < -32_768 || value > 32_767) {
             throw new Error(`Invaild value for type: short. Value must be between -32,768 and 32,767. Got: ${value}`);
         }
@@ -465,6 +659,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeUInt({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < 0 || value > 4_294_967_295) {
             throw new Error(`Invaild value for type: unsigned int. Value must be between 0 and 4,294,967,295. Got: ${value}`);
         }
@@ -491,6 +689,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeInt({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < -2_147_483_648 || value > 2_147_483_647) {
             throw new Error(`Invaild value for type: int. Value must be between -2,147,483,648 and 2,147,483,647. Got: ${value}`);
         }
@@ -517,6 +719,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeULong({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < 0 || value > 18_446_744_073_709_551_615n) {
             throw new Error(`Invaild value for type: unsigned long. Value must be between 0 and 18,446,744,073,709,551,615. Got: ${value}`);
         }
@@ -543,6 +749,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeLong({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < -9_223_372_036_854_775_808n || value > 9_223_372_036_854_775_807n) {
             throw new Error(`Invaild value for type: long. Value must be between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807. Got: ${value}`);
         }
@@ -569,6 +779,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeFloat({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < (1.4 * Math.pow(10, -45)) || value > (3.4 * Math.pow(10, 38))) {
             throw new Error(`Invaild value for type: float. Value must be between ${1.4 * Math.pow(10, -45)} and ${3.4 * Math.pow(10, 38)}. Got: ${value}`);
         }
@@ -597,6 +811,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
      */
     writeDouble({offset = this.#offset, value, littleEndian = false} = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (value < (4.9 * Math.pow(10, -324)) || value > (1.8 * Math.pow(10, 308))) {
             throw new Error(`Invaild value for type: double. Value must be between ${4.9 * Math.pow(10, -324)} and ${1.8 * Math.pow(10, 308)}. Got: ${value}`);
         }
@@ -626,6 +844,10 @@ export default class Buffer {
      * @param {*} littleEndian Whether the value should be written as a little-endian value. (Only applicable for UTF-16)
      */
     writeString({ offset = this.#offset, value, charSet = CharSets.UTF8, littleEndian = false } = {}) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (arguments.length > 1 && "offset" in (arguments[0] || {})) {
             this.#offset = offset;
         }
