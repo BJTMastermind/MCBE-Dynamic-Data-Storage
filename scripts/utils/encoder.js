@@ -3,7 +3,7 @@ import { CharSets } from "./charsets.js"
 /**
  * A class for encoding and decoding strings to and from byte arrays.
  */
-export default class Encoder {
+export class Encoder {
     #charSet
 
     constructor(charSet = CharSets.UTF8) {
