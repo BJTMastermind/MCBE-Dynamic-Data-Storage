@@ -1,14 +1,10 @@
 {
   "name": "dynamic-data-storage",
   "version": "1.0.0",
-  "main": "scripts/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
-  "author": "",
+  "author": "BJTMastermind",
   "license": "GPL-2.0",
-  "description": "",
+  "description": "A library that allows you to read and write data into a multiple shulker box based buffer for uses with the scripting API",
   "devDependencies": {
     "@minecraft/server": "^1.15.0-beta.1.21.31-stable",
     "@types/node": "^22.7.4"
