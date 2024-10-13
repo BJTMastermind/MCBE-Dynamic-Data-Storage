@@ -44,7 +44,7 @@ system.runInterval(() => {
     }
     if (test) {
         test = false;
-        throw new Error("This is a test error");
+        testFile();
     }
 }, 40);
 
@@ -93,4 +93,10 @@ function parseFile() {
 function clearFile() {
     let buffer = new Buffer();
     buffer.clear();
+}
+
+function testFile() {
+    let buffer = new Buffer();
+
+    buffer.writeString("This is a string.");
 }
