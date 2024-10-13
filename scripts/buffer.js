@@ -1,4 +1,4 @@
-import { BlockPermutation, BlockVolume, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
+import { BlockPermutation, BlockVolume, DimensionType, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
@@ -75,8 +75,7 @@ export default class Buffer {
 
         let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
         if (blocks.getCapacity() == 0) {
-            console.warn("Buffer is already closed!");
-            return;
+            throw new Error("Buffer is already clear!");
         }
 
         world.getDimension(this.#dimension).fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
@@ -178,12 +177,11 @@ export default class Buffer {
 
         let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
         if (blocks.getCapacity() == 0) {
-            throw Error("Aborting saving, buffer is empty!");
+            throw new Error("Aborting saving, buffer is empty!");
         }
 
         if (structureIds.includes(`dynamic_data_storage_file:${saveName}`) && !override) {
-            console.warn(`A buffer with the name ${saveName} already exists! Set override argument to true to override the existing buffer.`);
-            return;
+            throw new Error(`A buffer with the name ${saveName} already exists! Set override argument to true to override the existing buffer.`);
         }
 
         world.structureManager.createFromWorld(`dynamic_data_storage_file:${saveName}`, this.#dimension, {x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}, {saveMode: StructureSaveMode.World, includeEntities: false});
@@ -200,8 +198,7 @@ export default class Buffer {
         }
 
         if (offset < 0 && offset > MAX_SIZE) {
-            console.error("Invalid offset. Must be between 0 and " + MAX_SIZE);
-            return;
+            throw new Error("Invalid offset. Must be between 0 and " + MAX_SIZE);
         }
         this.#offset = offset;
     }
@@ -229,15 +226,15 @@ export default class Buffer {
 
         let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
         if (blocks.getCapacity() > 0) {
-            throw Error("Aborting loading, another buffer is loaded!");
+            throw new Error("Aborting loading, another buffer is loaded!");
         }
 
         let structureIds = world.structureManager.getWorldStructureIds();
         if (!structureIds.includes(`dynamic_data_storage_file:${saveName}`)) {
-            throw Error(`${saveName} does not exist!`);
+            throw new Error(`${saveName} does not exist!`);
         }
 
-        world.structureManager.place(`dynamic_data_storage_file:${saveName}`, this.#dimension, {x:0, y:this.#dimensionMinY, z:0});
+        world.structureManager.place(`dynamic_data_storage_file:${saveName}`, world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0});
     }
 
     /**
@@ -879,8 +876,7 @@ export default class Buffer {
         let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
         if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
-            console.warn("Offset out of bounds. Nothing to read at: " + offset);
-            return null;
+            throw new Error("Offset out of bounds. Nothing to read at: " + offset);
         }
 
         let dataSlot = dataBlock.getComponent("inventory").container.getItem(blockSlot);
@@ -907,7 +903,7 @@ export default class Buffer {
         let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
         if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
-            world.structureManager.place("dynamic_data_storage/empty_upside_down_shulker_box", this.#dimension, {x:0, y:this.#dimensionMinY, z:0});
+            world.structureManager.place("dynamic_data_storage/empty_upside_down_shulker_box", world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0});
         }
 
         let itemStack;
