@@ -4,6 +4,7 @@ import Buffer from "./buffer.js"
 let read = false;
 let write = false;
 let clear = false;
+let test = false;
 
 world.beforeEvents.chatSend.subscribe((event) => {
     switch (event.message) {
@@ -19,6 +20,10 @@ world.beforeEvents.chatSend.subscribe((event) => {
             event.cancel = true;
             clear = true;
             break;
+        case "!test test":
+            event.cancel = true;
+            test = true;
+            break;
         default:
             break;
     }
@@ -26,16 +31,20 @@ world.beforeEvents.chatSend.subscribe((event) => {
 
 system.runInterval(() => {
     if (read) {
-        parseFile();
         read = false;
+        parseFile();
     }
     if (write) {
-        writeFile();
         write = false;
+        writeFile();
     }
     if (clear) {
-        clearFile();
         clear = false;
+        clearFile();
+    }
+    if (test) {
+        test = false;
+        throw new Error("This is a test error");
     }
 }, 40);
 
@@ -44,13 +53,13 @@ function writeFile() {
 
     let locations = [{x:5, y:-64, z:4}, {x:5, y:-64, z:5}];
 
-    buffer.writeByte({value: 20});
-    buffer.writeShort({value: locations.length});
+    buffer.writeByte(20);
+    buffer.writeShort(locations.length);
 
     for (let i = 0; i < locations.length; i++) {
-        buffer.writeInt({value: locations[i].x});
-        buffer.writeInt({value: locations[i].y});
-        buffer.writeInt({value: locations[i].z});
+        buffer.writeInt(locations[i].x);
+        buffer.writeInt(locations[i].y);
+        buffer.writeInt(locations[i].z);
     }
 }
 
