@@ -13,7 +13,7 @@ export default class Buffer {
     #dimensionMinY = -64;
     #dimension;
 
-    constructor({ dimension = "minecraft:overworld", useExperimental = false } = {}) {
+    constructor(dimension = "minecraft:overworld", useExperimental = false) {
         if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
             throw new Error(`"${dimension}" is not a valid dimension.`);
         }
