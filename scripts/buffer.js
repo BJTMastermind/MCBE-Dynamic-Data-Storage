@@ -1,5 +1,5 @@
 import { BlockPermutation, BlockVolume, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
-import { Encoder } from "./utils/encoder.js";
+import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
 /**
