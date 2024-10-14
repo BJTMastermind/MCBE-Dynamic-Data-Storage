@@ -12,10 +12,10 @@ npm install https://github.com/BJTMastermind/MCBE-Dynamic-Data-Storage#1.0.0
 
 then to use the library in your project import the `Buffer` class with:
 
-```sh
+```js
 import Buffer from "@bjtmastermind/dynamic-data-storage/scripts/buffer";
 
-# When working with UTF-16 strings you will also want to import CharSets
+// When working with UTF-16 strings you will also want to import CharSets
 import { CharSets } from "@bjtmastermind/dynamic-data-storage/scripts/utils/charsets.js";
 ```
 
