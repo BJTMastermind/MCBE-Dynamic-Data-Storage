@@ -6,14 +6,17 @@ A library that allows you to read and write data into a multiple shulker box bas
 
 First install the library to your project with:
 
-```
-npm install https://github.com/BJTMastermind/MCBE-Dynamic-Data-Storage
+```sh
+npm install https://github.com/BJTMastermind/MCBE-Dynamic-Data-Storage@v1.0.0
 ```
 
 then to use the library in your project import the `Buffer` class with:
 
-```
-import Buffer from "dynamic-data-storage/scripts/buffer";
+```sh
+import Buffer from "@bjtmastermind/dynamic-data-storage/scripts/buffer";
+
+# When working with UTF-16 strings you will also want to import CharSets
+import { CharSets } from "@bjtmastermind/dynamic-data-storage/scripts/utils/charsets.js
 ```
 
 Now that you have it imported you will have the following methods avalible to use:
