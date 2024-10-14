@@ -16,7 +16,7 @@ then to use the library in your project import the `Buffer` class with:
 import Buffer from "@bjtmastermind/dynamic-data-storage/scripts/buffer";
 
 # When working with UTF-16 strings you will also want to import CharSets
-import { CharSets } from "@bjtmastermind/dynamic-data-storage/scripts/utils/charsets.js
+import { CharSets } from "@bjtmastermind/dynamic-data-storage/scripts/utils/charsets.js";
 ```
 
 Now that you have it imported you will have the following methods avalible to use:
