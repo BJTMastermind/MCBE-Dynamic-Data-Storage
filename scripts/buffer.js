@@ -131,9 +131,9 @@ export default class Buffer {
     }
 
     /**
-     * Returns the current offset of the buffer as a xyz location.
+     * Returns the current offset of the buffer as a location.
      *
-     * @param {*} offset The offset of the shulker box to read from.
+     * @param {*} offset The offset of the buffer to read from.
      * @returns The offset of the buffer in the form of `[x, z, slot]`.
      */
     getOffsetLocation(offset = this.#offset) {
@@ -238,10 +238,10 @@ export default class Buffer {
     }
 
     /**
-     * Reads a boolean from the shulker box at the specified offset.
+     * Reads a boolean from the buffer at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The boolean read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The boolean read from the buffer.
      */
     readBoolean(offset = this.#offset) {
         if (this.#isClosed) {
@@ -258,10 +258,10 @@ export default class Buffer {
     }
 
     /**
-     * Reads a unsigned byte from the shulker box at the specified offset.
+     * Reads a unsigned byte from the buffer at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The unsigned byte read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The unsigned byte read from the buffer.
      */
     readUByte(offset = this.#offset) {
         if (this.#isClosed) {
@@ -278,10 +278,10 @@ export default class Buffer {
     }
 
     /**
-     * Reads a byte from the shulker box at the specified offset.
+     * Reads a byte from the buffer at the specified offset.
      *
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The byte read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The byte read from the buffer.
      */
     readByte(offset = this.#offset) {
         if (this.#isClosed) {
@@ -298,11 +298,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a unsigned short from the shulker box at the specified offset.
+     * Reads a unsigned short from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The unsigned short read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The unsigned short read from the buffer.
      */
     readUShort(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -322,11 +322,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a short from the shulker box at the specified offset.
+     * Reads a short from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The short read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The short read from the buffer.
      */
     readShort(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -346,11 +346,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a unsigned integer from the shulker box at the specified offset.
+     * Reads a unsigned integer from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The unsigned integer read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The unsigned integer read from the buffer.
      */
     readUInt(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -370,11 +370,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a integer from the shulker box at the specified offset.
+     * Reads a integer from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The integer read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The integer read from the buffer.
      */
     readInt(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -394,11 +394,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a unsigned long from the shulker box at the specified offset.
+     * Reads a unsigned long from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The unsigned long read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The unsigned long read from the buffer.
      */
     readULong(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -418,11 +418,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a long from the shulker box at the specified offset.
+     * Reads a long from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The long read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The long read from the buffer.
      */
     readLong(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -442,11 +442,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a float from the shulker box at the specified offset.
+     * Reads a float from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The float read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The float read from the buffer.
      */
     readFloat(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -470,11 +470,11 @@ export default class Buffer {
     }
 
     /**
-     * Reads a double from the shulker box at the specified offset.
+     * Reads a double from the buffer at the specified offset.
      *
      * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The double read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The double read from the buffer.
      */
     readDouble(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -502,12 +502,12 @@ export default class Buffer {
     }
 
     /**
-     * Reads a string from the shulker box at the specified offset.
+     * Reads a string from the buffer at the specified offset.
      *
      * @param {*} charSet The character set of the string.
      * @param {*} littleEndian Whether the value should be read as a little-endian value. (Only applicable for UTF-16)
-     * @param {*} offset The offset of the shulker box to read from.
-     * @returns The string read from the shulker box.
+     * @param {*} offset The offset of the buffer to read from.
+     * @returns The string read from the buffer.
      */
     readString(charSet = CharSets.UTF8, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -534,10 +534,10 @@ export default class Buffer {
     }
 
     /**
-     * Writes a boolean to the shulker box at the specified offset.
+     * Writes a boolean to the buffer at the specified offset.
      *
-     * @param {*} value The boolean to write to the shulker box.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The boolean to write to the buffer.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeBoolean(value, offset = this.#offset) {
         if (this.#isClosed) {
@@ -553,10 +553,10 @@ export default class Buffer {
     }
 
     /**
-     * Writes a unsigned byte to the shulker box at the specified offset.
+     * Writes a unsigned byte to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned byte to write to the shulker box.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The unsigned byte to write to the buffer.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeUByte(value, offset = this.#offset) {
         if (this.#isClosed) {
@@ -577,10 +577,10 @@ export default class Buffer {
     }
 
     /**
-     * Writes a byte to the shulker box at the specified offset.
+     * Writes a byte to the buffer at the specified offset.
      *
-     * @param {*} value The byte to write to the shulker box.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} value The byte to write to the buffer.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeByte(value, offset = this.#offset) {
         if (this.#isClosed) {
@@ -601,11 +601,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a unsigned short to the shulker box at the specified offset.
+     * Writes a unsigned short to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned short to write to the shulker box.
+     * @param {*} value The unsigned short to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeUShort(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -631,11 +631,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a short to the shulker box at the specified offset.
+     * Writes a short to the buffer at the specified offset.
      *
-     * @param {*} value The short to write to the shulker box.
+     * @param {*} value The short to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeShort(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -661,11 +661,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a unsigned integer to the shulker box at the specified offset.
+     * Writes a unsigned integer to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned integer to write to the shulker box.
+     * @param {*} value The unsigned integer to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeUInt(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -691,11 +691,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a integer to the shulker box at the specified offset.
+     * Writes a integer to the buffer at the specified offset.
      *
-     * @param {*} value The integer to write to the shulker box.
+     * @param {*} value The integer to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeInt(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -721,11 +721,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a unsigned long to the shulker box at the specified offset.
+     * Writes a unsigned long to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned long to write to the shulker box.
+     * @param {*} value The unsigned long to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeULong(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -751,11 +751,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a long to the shulker box at the specified offset.
+     * Writes a long to the buffer at the specified offset.
      *
-     * @param {*} value The long to write to the shulker box.
+     * @param {*} value The long to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeLong(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -781,11 +781,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a float to the shulker box at the specified offset.
+     * Writes a float to the buffer at the specified offset.
      *
-     * @param {*} value The float to write to the shulker box.
+     * @param {*} value The float to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeFloat(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -813,11 +813,11 @@ export default class Buffer {
     }
 
     /**
-     * Writes a double to the shulker box at the specified offset.
+     * Writes a double to the buffer at the specified offset.
      *
-     * @param {*} value The double to write to the shulker box.
+     * @param {*} value The double to write to the buffer.
      * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeDouble(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -845,12 +845,12 @@ export default class Buffer {
     }
 
     /**
-     * Writes a string to the shulker box at the specified offset.
+     * Writes a string to the buffer at the specified offset.
      *
-     * @param {*} value The string to write to the shulker box.
+     * @param {*} value The string to write to the buffer.
      * @param {*} charSet The character set of the string.
      * @param {*} littleEndian Whether the value should be written as a little-endian value. (Only applicable for UTF-16)
-     * @param {*} offset The offset of the shulker box to write to.
+     * @param {*} offset The offset of the buffer to write to.
      */
     writeString(value, charSet = CharSets.UTF8, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
