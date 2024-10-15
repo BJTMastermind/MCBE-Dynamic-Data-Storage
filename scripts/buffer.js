@@ -903,7 +903,7 @@ export default class Buffer {
         let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
         if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
-            world.structureManager.place("dynamic_data_storage/empty_upside_down_shulker_box", world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0});
+            world.structureManager.place("dynamic_data_storage/empty_upside_down_shulker_box", world.getDimension(this.#dimension), {x:blockX, y:this.#dimensionMinY, z:blockZ});
         }
 
         let itemStack;
