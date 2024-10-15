@@ -7,7 +7,10 @@ A library that allows you to read and write data into a multiple shulker box bas
 First install the library to your project with:
 
 ```sh
-npm install https://github.com/BJTMastermind/MCBE-Dynamic-Data-Storage#1.0.0
+# install the latest version with
+npm install https://github.com/BJTMastermind/MCBE-Dynamic-Data-Storage
+# or install a specific version with
+npm install https://github.com/BJTMastermind/MCBE-Dynamic-Data-Storage#<version>
 ```
 
 then to use the library in your project import the `Buffer` class with:
