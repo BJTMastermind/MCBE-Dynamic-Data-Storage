@@ -7,13 +7,13 @@ import { CharSets } from "./utils/charsets.js";
  */
 export default class Buffer {
     static #MAX_SIZE = 48*48*27;
-    #useExperimental;
-    #isClosed = false;
+    /** @deprecated */ #useExperimental;
+    /** @deprecated */ #isClosed = false;
     #offset = 0;
     #dimensionMinY = -64;
     #dimension;
 
-    constructor(dimension = "minecraft:overworld", useExperimental = false) {
+    constructor(dimension = "minecraft:overworld", /** @deprecated */ useExperimental = false) {
         if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
             throw new Error(`"${dimension}" is not a valid dimension.`);
         }
@@ -63,6 +63,7 @@ export default class Buffer {
      * Closes the buffer.
      *
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     close() {
         if (!this.#useExperimental) {
@@ -87,6 +88,7 @@ export default class Buffer {
      *
      * @param {*} saveName The name of the saved buffer to delete.
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     delete(saveName) {
         if (!this.#useExperimental) {
@@ -159,6 +161,7 @@ export default class Buffer {
      *
      * @throws Error if buffer is empty.
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     save(saveName, override = false) {
         if (!this.#useExperimental) {
@@ -210,6 +213,7 @@ export default class Buffer {
      *
      * @throws `Error` if another buffer is already loaded or `saveName` doesn't exist.
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     load(saveName) {
         if (!this.#useExperimental) {
