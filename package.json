@@ -1,12 +1,11 @@
 {
   "name": "@bjtmastermind/dynamic-data-storage",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "keywords": [],
   "author": "BJTMastermind",
   "license": "GPL-2.0",
-  "description": "A library that allows you to read and write data into a multiple shulker box based buffer for uses with the scripting API",
+  "description": "A library that allows you to read and write data into a multiple barrel based buffer for uses with the scripting API",
   "devDependencies": {
-    "@minecraft/server": "^1.15.0-beta.1.21.31-stable",
-    "@types/node": "^22.7.4"
+    "@minecraft/server": "^1.15.0-beta.1.21.31-stable"
   }
 }
