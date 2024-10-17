@@ -4,7 +4,7 @@
   "keywords": [],
   "author": "BJTMastermind",
   "license": "GPL-2.0",
-  "description": "A library that allows you to read and write data into a multiple barrel based buffer for uses with the scripting API",
+  "description": "A library that allows you to read and write data into a multi-barrel based buffer for uses with the scripting API",
   "devDependencies": {
     "@minecraft/server": "^1.15.0-beta.1.21.31-stable"
   }
