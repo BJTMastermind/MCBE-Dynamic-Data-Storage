@@ -174,6 +174,14 @@ buffer.load();
 
 All methods have doc strings for extra details about how to use them and what they are for.
 
+Once your ready to test your scripts in-game, open your terminal in the root folder of your pack and run:
+
+```
+node esbuild.js
+```
+
+You should now have a `scripts` folder generated with a single file in it called `main.js` which the game will read from.
+
 ***For Devs***
 
 All data written from this library is stored in a 48x48 area under X0,Z0 at the bottom of the world in the dimension it was told to be saved in. (Defaults to the overworld)
