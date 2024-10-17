@@ -13,7 +13,7 @@ You will need to download and install the following program(s):
 ### Project Setup
 
 > [!TIP]
-> If you don't want to manually setup the project you can download it as a template from [BJTMastermind/Scripts-Behavior-Pack-Template](https://github.com/BJTMastermind/Scripts-Behavior-Pack-Template) (Currently JavaScript only)
+> If you don't want to manually setup the project you can download it as a template from [BJTMastermind/Scripts-Behavior-Pack-Template](https://github.com/BJTMastermind/Scripts-Behavior-Pack-Template) (Currently JavaScript only) and start reading from [Installing And Using The Library](#installing-and-using-the-library)
 
 First let's make the pack a node package, open your terminal and run:
 
