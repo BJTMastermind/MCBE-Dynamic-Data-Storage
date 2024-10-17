@@ -4,6 +4,12 @@ A library that allows you to read and write data into a multi-barrel based buffe
 
 ## How To Use
 
+### Prerequisites
+
+You will need to download and install the following program(s):
+
+* [Node.js](https://nodejs.org/): ESBuild depends on it, and includes `npm` for installing packages.
+
 ### Project Setup
 
 > [!TIP]
