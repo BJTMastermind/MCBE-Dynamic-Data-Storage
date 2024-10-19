@@ -242,6 +242,27 @@ export default class Buffer {
     }
 
     /**
+     * Removes `removeByteCount` bytes from the buffer left to right at the specified offset.
+     *
+     * @param {*} removeByteCount The number of bytes to remove.
+     * @param {*} offset The starting offset of the buffer to remove from.
+     *
+     * @throws `Error` if there is nothing to remove at the specified offset.
+     */
+    remove(removeByteCount = 1, offset) {
+        if (this.#read(offset) == null) {
+            throw new Error(`Nothing to remove at offset: ${offset}`);
+        }
+
+        for (let i = offset; i < (offset + removeByteCount); i++) {
+            let [x, z, slot] = this.getOffsetLocation(i);
+
+            let block = world.getDimension(this.#dimension).getBlock(x, this.#dimensionMinY, z);
+            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+        }
+    }
+
+    /**
      * Reads a boolean from the buffer at the specified offset.
      *
      * @param {*} offset The offset of the buffer to read from.
