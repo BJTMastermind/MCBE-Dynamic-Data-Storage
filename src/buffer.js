@@ -262,8 +262,10 @@ export default class Buffer {
             block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
         }
 
+        console.warn("Offset = " + offset);
+
         // Shift the remaining bytes to the left.
-        for (let i = (offset + removeByteCount) + 1; i < ((offset + removeByteCount) + 1) + removeByteCount; i++) {
+        for (let i = (offset + removeByteCount); i < (offset + removeByteCount) + removeByteCount; i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
             let value = this.#read(i);
@@ -271,6 +273,7 @@ export default class Buffer {
             let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
             block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
 
+            console.warn(`${offset + i}`);
             this.#write(value, offset + i);
         }
     }
