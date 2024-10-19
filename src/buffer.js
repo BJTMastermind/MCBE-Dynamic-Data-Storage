@@ -154,6 +154,28 @@ export default class Buffer {
     }
 
     /**
+     * Returns the number of used bytes in the buffer.
+     *
+     * @returns The number of used bytes.
+     */
+    getUsedBytes() {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        let count = 0;
+        for (let i = 0; i < Buffer.#MAX_SIZE; i++) {
+            try {
+                this.#read(i);
+                count++;
+            } catch (e) {
+                return count;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Saves the buffer to the world data so i can be loaded again later. (Doesn't close the buffer)
      *
      * @param {*} saveName The name for the buffer to be save as.
@@ -239,6 +261,48 @@ export default class Buffer {
         }
 
         world.structureManager.place(`dynamic_data_storage_file:${saveName}`, world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0});
+    }
+
+    /**
+     * Removes `removeByteCount` bytes from the buffer left to right at the specified offset.
+     *
+     * @param {*} removeByteCount The number of bytes to remove.
+     * @param {*} offset The starting offset of the buffer to remove from.
+     *
+     * @throws `Error` if there is nothing to remove at the specified offset.
+     */
+    remove(removeByteCount = 1, offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        try {
+            this.#read(offset);
+        } catch (e) {
+            throw new Error(`Nothing to remove at offset ${offset}.`);
+        }
+
+        let byteCount = this.getUsedBytes();
+
+        // Remove the specified number of bytes from the buffer.
+        for (let i = offset; i < (offset + removeByteCount); i++) {
+            let [x, z, slot] = this.getOffsetLocation(i);
+
+            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
+            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+        }
+
+        // Shift the remaining bytes to the left.
+        for (let i = (offset + removeByteCount), j = 0; i < byteCount; i++) {
+            let [x, z, slot] = this.getOffsetLocation(i);
+
+            let value = this.#read(i);
+
+            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
+            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+
+            this.#write(value, offset + j++);
+        }
     }
 
     /**
