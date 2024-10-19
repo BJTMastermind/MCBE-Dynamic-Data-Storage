@@ -3,12 +3,12 @@ import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
 /**
- * A class for parsing and writing binary data to and from a multi-shulker box based buffer within a Minecraft world.
+ * A class for parsing and writing binary data to and from a multi-barrel based buffer within a Minecraft world.
  */
 export default class Buffer {
     static #MAX_SIZE = 48*48*27;
-    #useExperimental;
-    #isClosed = false;
+    /** @deprecated */ #useExperimental;
+    /** @deprecated */ #isClosed = false;
     #offset = 0;
     #dimensionMinY = -64;
     #dimension;
@@ -17,7 +17,7 @@ export default class Buffer {
      * @param {string} dimension
      * @param {boolean} useExperimental
      */
-    constructor(dimension = "minecraft:overworld", useExperimental = false) {
+    constructor(dimension = "minecraft:overworld", /** @deprecated */ useExperimental = false) {
         if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
             throw new Error(`"${dimension}" is not a valid dimension.`);
         }
@@ -36,7 +36,7 @@ export default class Buffer {
         /** @type {Block} */
         let checkBlock = checkDimension.getBlock({x:0, y:this.#dimensionMinY, z:0});
 
-        if (checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:light_gray_shulker_box") {
+        if (checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:barrel") {
             checkDimension.runCommand(`tickingarea add 0 ${this.#dimensionMinY} 0 47 ${this.#dimensionMinY} 47 \"dynamic-data-storage-area\" true`);
             checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
             checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY + 1, z:0}, {x:47, y:this.#dimensionMinY + 1, z:47}), "minecraft:bedrock");
@@ -72,6 +72,7 @@ export default class Buffer {
      * @returns {void}
      * 
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     close() {
         if (!this.#useExperimental) {
@@ -82,7 +83,7 @@ export default class Buffer {
             throw new Error("Buffer is already closed!");
         }
 
-        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
+        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:barrel")]});
         if (blocks.getCapacity() == 0) {
             throw new Error("Buffer is already clear!");
         }
@@ -98,6 +99,7 @@ export default class Buffer {
      * @returns {void}
      * 
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     delete(saveName) {
         if (!this.#useExperimental) {
@@ -163,6 +165,28 @@ export default class Buffer {
     }
 
     /**
+     * Returns the number of used bytes in the buffer.
+     *
+     * @returns The number of used bytes.
+     */
+    getUsedBytes() {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        let count = 0;
+        for (let i = 0; i < Buffer.#MAX_SIZE; i++) {
+            try {
+                this.#read(i);
+                count++;
+            } catch (e) {
+                return count;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Saves the buffer to the world data so i can be loaded again later. (Doesn't close the buffer)
      *
      * @param {string} saveName The name for the buffer to be save as.
@@ -171,6 +195,7 @@ export default class Buffer {
      *
      * @throws Error if buffer is empty.
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     save(saveName, override = false) {
         if (!this.#useExperimental) {
@@ -187,7 +212,7 @@ export default class Buffer {
 
         let structureIds = world.structureManager.getWorldStructureIds();
 
-        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
+        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:barrel")]});
         if (blocks.getCapacity() == 0) {
             throw new Error("Aborting saving, buffer is empty!");
         }
@@ -224,6 +249,7 @@ export default class Buffer {
      *
      * @throws `Error` if another buffer is already loaded or `saveName` doesn't exist.
      * @experimental This is an experimental feature and is not guaranteed to stay.
+     * @deprecated This feature is deprecated and will be removed in a future version.
      */
     load(saveName) {
         if (!this.#useExperimental) {
@@ -238,7 +264,7 @@ export default class Buffer {
             throw new Error("save name can't be blank");
         }
 
-        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:light_gray_shulker_box")]});
+        let blocks = world.getDimension(this.#dimension).getBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), {includePermutations: [BlockPermutation.resolve("minecraft:barrel")]});
         if (blocks.getCapacity() > 0) {
             throw new Error("Aborting loading, another buffer is loaded!");
         }
@@ -249,6 +275,48 @@ export default class Buffer {
         }
 
         world.structureManager.place(`dynamic_data_storage_file:${saveName}`, world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0});
+    }
+
+    /**
+     * Removes `removeByteCount` bytes from the buffer left to right at the specified offset.
+     *
+     * @param {*} removeByteCount The number of bytes to remove.
+     * @param {*} offset The starting offset of the buffer to remove from.
+     *
+     * @throws `Error` if there is nothing to remove at the specified offset.
+     */
+    remove(removeByteCount = 1, offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        try {
+            this.#read(offset);
+        } catch (e) {
+            throw new Error(`Nothing to remove at offset ${offset}.`);
+        }
+
+        let byteCount = this.getUsedBytes();
+
+        // Remove the specified number of bytes from the buffer.
+        for (let i = offset; i < (offset + removeByteCount); i++) {
+            let [x, z, slot] = this.getOffsetLocation(i);
+
+            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
+            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+        }
+
+        // Shift the remaining bytes to the left.
+        for (let i = (offset + removeByteCount), j = 0; i < byteCount; i++) {
+            let [x, z, slot] = this.getOffsetLocation(i);
+
+            let value = this.#read(i);
+
+            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
+            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+
+            this.#write(value, offset + j++);
+        }
     }
 
     /**
@@ -538,7 +606,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
-        let length = this.readUShort({offset, littleEndian});
+        let length = this.readUShort(littleEndian, offset);
         offset += 2;
 
         /** @type {number[]} */
@@ -913,7 +981,7 @@ export default class Buffer {
         /** @type {Block} */
         let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
-        if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
+        if (dataBlock.typeId != "minecraft:barrel") {
             throw new Error("Offset out of bounds. Nothing to read at: " + offset);
         }
 
@@ -946,8 +1014,8 @@ export default class Buffer {
         /** @type {Block} */
         let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
 
-        if (dataBlock.typeId != "minecraft:light_gray_shulker_box") {
-            world.structureManager.place("dynamic_data_storage/empty_upside_down_shulker_box", world.getDimension(this.#dimension), {x:blockX, y:this.#dimensionMinY, z:blockZ});
+        if (dataBlock.typeId != "minecraft:barrel") {
+            world.getDimension(this.#dimension).setBlockPermutation({x:blockX, y:this.#dimensionMinY, z:blockZ}, BlockPermutation.resolve("minecraft:barrel", {"facing_direction": 0}));
         }
 
         let itemStack;
