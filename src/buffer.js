@@ -1,4 +1,4 @@
-import { Block, BlockPermutation, BlockVolume, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
+import { Block, BlockInventoryComponent, BlockPermutation, BlockVolume, Container, DimensionType, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
@@ -20,7 +20,7 @@ export default class Buffer {
      * @param {boolean} useExperimental
      */
     constructor(dimension = "minecraft:overworld", /** @deprecated */ useExperimental = false) {
-        if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
+        if (!(DimensionTypes.getAll().includes(/** @type {DimensionType} */ (DimensionTypes.get(dimension))))) {
             throw new Error(`"${dimension}" is not a valid dimension.`);
         }
 
@@ -35,10 +35,10 @@ export default class Buffer {
 
         // Check if data storage area has been initialized, if not, initialize it.
         let checkDimension = world.getDimension(this.#dimension);
-        /** @type {Block} */
-        let checkBlock = checkDimension.getBlock({x:0, y:this.#dimensionMinY, z:0});
 
-        if (checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:barrel") {
+        let checkBlock = /** @type {Block} */ (checkDimension.getBlock({x:0, y:this.#dimensionMinY, z:0}));
+
+        if (checkBlock != undefined && checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:barrel") {
             checkDimension.runCommand(`tickingarea add 0 ${this.#dimensionMinY} 0 47 ${this.#dimensionMinY} 47 \"dynamic-data-storage-area\" true`);
             checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
             checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY + 1, z:0}, {x:47, y:this.#dimensionMinY + 1, z:47}), "minecraft:bedrock");
@@ -56,7 +56,7 @@ export default class Buffer {
 
     /**
      * Clears all of the buffers data and resets the current offset to 0.
-     * 
+     *
      * @returns {void}
      */
     clear() {
@@ -72,7 +72,7 @@ export default class Buffer {
      * Closes the buffer.
      *
      * @returns {void}
-     * 
+     *
      * @experimental This is an experimental feature and is not guaranteed to stay.
      * @deprecated This feature is deprecated and will be removed in a future version.
      */
@@ -99,7 +99,7 @@ export default class Buffer {
      *
      * @param {string} saveName The name of the saved buffer to delete.
      * @returns {void}
-     * 
+     *
      * @experimental This is an experimental feature and is not guaranteed to stay.
      * @deprecated This feature is deprecated and will be removed in a future version.
      */
@@ -223,7 +223,7 @@ export default class Buffer {
             throw new Error(`A buffer with the name ${saveName} already exists! Set override argument to true to override the existing buffer.`);
         }
 
-        world.structureManager.createFromWorld(`dynamic_data_storage_file:${saveName}`, this.#dimension, {x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}, {saveMode: StructureSaveMode.World, includeEntities: false});
+        world.structureManager.createFromWorld(`dynamic_data_storage_file:${saveName}`, world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}, {saveMode: StructureSaveMode.World, includeEntities: false});
     }
 
     /**
@@ -237,8 +237,8 @@ export default class Buffer {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (offset < 0 && offset > MAX_SIZE) {
-            throw new Error("Invalid offset. Must be between 0 and " + MAX_SIZE);
+        if (offset < 0 && offset > Buffer.MAX_SIZE) {
+            throw new Error("Invalid offset. Must be between 0 and " + Buffer.MAX_SIZE);
         }
         this.#offset = offset;
     }
@@ -305,8 +305,8 @@ export default class Buffer {
         for (let i = offset; i < (offset + removeByteCount); i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
-            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
-            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+            let block = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z}));
+            /** @type {Container} */ (/** @type {BlockInventoryComponent} */ (block.getComponent("inventory")).container).setItem(slot, new ItemStack("minecraft:air"));
         }
 
         // Shift the remaining bytes to the left.
@@ -315,8 +315,8 @@ export default class Buffer {
 
             let value = this.#read(i);
 
-            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
-            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+            let block = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z}));
+            /** @type {Container} */ (/** @type {BlockInventoryComponent} */ (block.getComponent("inventory")).container).setItem(slot, new ItemStack("minecraft:air"));
 
             this.#write(value, offset + j++);
         }
@@ -641,7 +641,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
-        this.#write((value & 0xFF) ? 1 : 0, offset);
+        this.#write(value ? 1 : 0, offset);
         this.#offset += 1;
     }
 
@@ -981,15 +981,13 @@ export default class Buffer {
     #read(offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
-        /** @type {Block} */
-        let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
+        let dataBlock = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ}));
 
         if (dataBlock.typeId != "minecraft:barrel") {
             throw new Error("Offset out of bounds. Nothing to read at: " + offset);
         }
 
-        /** @type {ItemStack} */
-        let dataSlot = dataBlock.getComponent("inventory").container.getItem(blockSlot);
+        let dataSlot = /** @type {ItemStack} */ (/** @type {Container} */ (/** @type {BlockInventoryComponent} */ (dataBlock.getComponent("inventory")).container).getItem(blockSlot));
 
         switch (dataSlot.typeId) {
             case "minecraft:tinted_glass":
@@ -1009,13 +1007,13 @@ export default class Buffer {
 
     /**
      * @param {number} value
+     * @param {number} offset
      * @returns {void}
      */
     #write(value, offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
-        /** @type {Block} */
-        let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
+        let dataBlock = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ}));
 
         if (dataBlock.typeId != "minecraft:barrel") {
             world.getDimension(this.#dimension).setBlockPermutation({x:blockX, y:this.#dimensionMinY, z:blockZ}, BlockPermutation.resolve("minecraft:barrel", {"facing_direction": 0}));
@@ -1034,6 +1032,6 @@ export default class Buffer {
             itemStack = new ItemStack("minecraft:black_stained_glass", value - 192);
         }
 
-        dataBlock.getComponent("inventory").container.setItem(blockSlot, itemStack);
+        /** @type {Container} */ (/** @type {BlockInventoryComponent} */ (dataBlock.getComponent("inventory")).container).setItem(blockSlot, itemStack);
     }
 }
