@@ -273,7 +273,7 @@ export default class Buffer {
             let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
             block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
 
-            console.warn(`${offset + i}`);
+            console.warn(`${offset}, ${i}, ${offset + i}`);
             this.#write(value, offset + i);
         }
     }
