@@ -159,6 +159,10 @@ export default class Buffer {
      * @returns The number of used bytes.
      */
     getUsedBytes() {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         let count = 0;
         for (let i = 0; i < Buffer.#MAX_SIZE; i++) {
             try {
@@ -268,6 +272,10 @@ export default class Buffer {
      * @throws `Error` if there is nothing to remove at the specified offset.
      */
     remove(removeByteCount = 1, offset) {
+        if (this.#isClosed) {
+            throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
         if (this.#read(offset) == null) {
             throw new Error(`Nothing to remove at offset: ${offset}`);
         }
