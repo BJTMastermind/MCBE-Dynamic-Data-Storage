@@ -254,11 +254,24 @@ export default class Buffer {
             throw new Error(`Nothing to remove at offset: ${offset}`);
         }
 
+        // Remove the specified number of bytes from the buffer.
         for (let i = offset; i < (offset + removeByteCount); i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
             let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
             block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+        }
+
+        // Shift the remaining bytes to the left.
+        for (let i = (offset + removeByteCount) + 1; i < ((offset + removeByteCount) + 1) + removeByteCount; i++) {
+            let [x, z, slot] = this.getOffsetLocation(i);
+
+            let value = this.#read(i);
+
+            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
+            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+
+            this.#write(value, offset + i);
         }
     }
 
