@@ -276,8 +276,10 @@ export default class Buffer {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (this.#read(offset) == null) {
-            throw new Error(`Nothing to remove at offset: ${offset}`);
+        try {
+            this.#read(offset);
+        } catch (e) {
+            throw new Error(`Nothing to remove at offset ${offset}.`);
         }
 
         let byteCount = this.getUsedBytes();
