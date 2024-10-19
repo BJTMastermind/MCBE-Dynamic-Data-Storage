@@ -154,6 +154,24 @@ export default class Buffer {
     }
 
     /**
+     * Returns the number of used bytes in the buffer.
+     *
+     * @returns The number of used bytes.
+     */
+    getUsedBytes() {
+        let count = 0;
+        for (let i = 0; i < MAX_SIZE; i++) {
+            try {
+                this.#read(i);
+                count++;
+            } catch (e) {
+                return count;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Saves the buffer to the world data so i can be loaded again later. (Doesn't close the buffer)
      *
      * @param {*} saveName The name for the buffer to be save as.
@@ -254,6 +272,8 @@ export default class Buffer {
             throw new Error(`Nothing to remove at offset: ${offset}`);
         }
 
+        let byteCount = this.getUsedBytes();
+
         // Remove the specified number of bytes from the buffer.
         for (let i = offset; i < (offset + removeByteCount); i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
@@ -265,7 +285,7 @@ export default class Buffer {
         console.warn(this.#offset);
 
         // Shift the remaining bytes to the left.
-        for (let i = (offset + removeByteCount), j = 0; i < this.#offset - (offset + removeByteCount); i++) {
+        for (let i = (offset + removeByteCount), j = 0; i < byteCount - (offset + removeByteCount); i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
             let value = this.#read(i);
