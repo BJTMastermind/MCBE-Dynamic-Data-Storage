@@ -6,11 +6,13 @@ import { CharSets } from "./utils/charsets.js";
  * A class for parsing and writing binary data to and from a multi-barrel based buffer within a Minecraft world.
  */
 export default class Buffer {
+    /** @readonly */
     static #MAX_SIZE = 48*48*27;
     /** @deprecated */ #useExperimental;
     /** @deprecated */ #isClosed = false;
     #offset = 0;
     #dimensionMinY = -64;
+    /** @type {string} */
     #dimension;
 
     /**
@@ -147,7 +149,7 @@ export default class Buffer {
      * Returns the current offset of the buffer as a location.
      *
      * @param {number} offset The offset of the buffer to read from.
-     * @returns {number[]} The offset of the buffer in the form of `[x, z, slot]`.
+     * @returns {[x: number, z: number, slot: number]} The offset of the buffer in the form of `[x, z, slot]`.
      */
     getOffsetLocation(offset = this.#offset) {
         if (this.#isClosed) {
@@ -167,7 +169,7 @@ export default class Buffer {
     /**
      * Returns the number of used bytes in the buffer.
      *
-     * @returns The number of used bytes.
+     * @returns {number} The number of used bytes.
      */
     getUsedBytes() {
         if (this.#isClosed) {
@@ -280,8 +282,9 @@ export default class Buffer {
     /**
      * Removes `removeByteCount` bytes from the buffer left to right at the specified offset.
      *
-     * @param {*} removeByteCount The number of bytes to remove.
-     * @param {*} offset The starting offset of the buffer to remove from.
+     * @param {number} removeByteCount The number of bytes to remove.
+     * @param {number} offset The starting offset of the buffer to remove from.
+     * @returns {void}
      *
      * @throws `Error` if there is nothing to remove at the specified offset.
      */
