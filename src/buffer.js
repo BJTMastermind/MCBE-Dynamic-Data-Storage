@@ -257,7 +257,7 @@ export default class Buffer {
         for (let i = offset; i < (offset + removeByteCount); i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
-            let block = world.getDimension(this.#dimension).getBlock(x, this.#dimensionMinY, z);
+            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
             block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
         }
     }
