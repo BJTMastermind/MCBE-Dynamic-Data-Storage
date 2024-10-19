@@ -282,10 +282,8 @@ export default class Buffer {
             block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
         }
 
-        console.warn(`${byteCount}, ${offset}, ${removeByteCount}`);
-
         // Shift the remaining bytes to the left.
-        for (let i = (offset + removeByteCount), j = 0; i < byteCount - removeByteCount; i++) {
+        for (let i = (offset + removeByteCount), j = 0; i < byteCount; i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
             let value = this.#read(i);
