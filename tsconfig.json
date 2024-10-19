@@ -13,8 +13,8 @@
         "noPropertyAccessFromIndexSignature": true,
         "noUncheckedIndexedAccess": true,
         "allowUnreachableCode": false,
-        "allowImportingTsExtensions": true,
-        "noUnusedLocals": false,
-        "noUnusedParameters": false
+        "noUnusedLocals": true,
+        "allowUnusedLabels": false,
+        "noUnusedParameters": true
     }
 }
