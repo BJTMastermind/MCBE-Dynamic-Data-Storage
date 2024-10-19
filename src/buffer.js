@@ -160,7 +160,7 @@ export default class Buffer {
      */
     getUsedBytes() {
         let count = 0;
-        for (let i = 0; i < MAX_SIZE; i++) {
+        for (let i = 0; i < Buffer.#MAX_SIZE; i++) {
             try {
                 this.#read(i);
                 count++;
