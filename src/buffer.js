@@ -1,4 +1,4 @@
-import { BlockPermutation, BlockVolume, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
+import { Block, BlockInventoryComponent, BlockPermutation, BlockVolume, Container, DimensionType, DimensionTypes, ItemStack, StructureSaveMode, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.js";
 import { CharSets } from "./utils/charsets.js";
 
@@ -6,15 +6,21 @@ import { CharSets } from "./utils/charsets.js";
  * A class for parsing and writing binary data to and from a multi-barrel based buffer within a Minecraft world.
  */
 export default class Buffer {
+    /** @readonly */
     static #MAX_SIZE = 48*48*27;
     /** @deprecated */ #useExperimental;
     /** @deprecated */ #isClosed = false;
     #offset = 0;
     #dimensionMinY = -64;
+    /** @type {string} */
     #dimension;
 
+    /**
+     * @param {string} dimension
+     * @param {boolean} useExperimental
+     */
     constructor(dimension = "minecraft:overworld", /** @deprecated */ useExperimental = false) {
-        if (!(DimensionTypes.getAll().includes(DimensionTypes.get(dimension)))) {
+        if (!(DimensionTypes.getAll().includes(/** @type {DimensionType} */ (DimensionTypes.get(dimension))))) {
             throw new Error(`"${dimension}" is not a valid dimension.`);
         }
 
@@ -29,9 +35,10 @@ export default class Buffer {
 
         // Check if data storage area has been initialized, if not, initialize it.
         let checkDimension = world.getDimension(this.#dimension);
-        let checkBlock = checkDimension.getBlock({x:0, y:this.#dimensionMinY, z:0});
 
-        if (checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:barrel") {
+        let checkBlock = /** @type {Block} */ (checkDimension.getBlock({x:0, y:this.#dimensionMinY, z:0}));
+
+        if (checkBlock != undefined && checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:barrel") {
             checkDimension.runCommand(`tickingarea add 0 ${this.#dimensionMinY} 0 47 ${this.#dimensionMinY} 47 \"dynamic-data-storage-area\" true`);
             checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}), "minecraft:air");
             checkDimension.fillBlocks(new BlockVolume({x:0, y:this.#dimensionMinY + 1, z:0}, {x:47, y:this.#dimensionMinY + 1, z:47}), "minecraft:bedrock");
@@ -41,7 +48,7 @@ export default class Buffer {
     /**
      * The maximum size supported by the buffer.
      *
-     * @returns 62,208
+     * @returns {number} 62,208
      */
     static get MAX_SIZE() {
         return Buffer.#MAX_SIZE;
@@ -49,6 +56,8 @@ export default class Buffer {
 
     /**
      * Clears all of the buffers data and resets the current offset to 0.
+     *
+     * @returns {void}
      */
     clear() {
         if (this.#isClosed) {
@@ -61,6 +70,8 @@ export default class Buffer {
 
     /**
      * Closes the buffer.
+     *
+     * @returns {void}
      *
      * @experimental This is an experimental feature and is not guaranteed to stay.
      * @deprecated This feature is deprecated and will be removed in a future version.
@@ -86,7 +97,9 @@ export default class Buffer {
     /**
      * Deletes the saved buffer from the world data.
      *
-     * @param {*} saveName The name of the saved buffer to delete.
+     * @param {string} saveName The name of the saved buffer to delete.
+     * @returns {void}
+     *
      * @experimental This is an experimental feature and is not guaranteed to stay.
      * @deprecated This feature is deprecated and will be removed in a future version.
      */
@@ -109,7 +122,7 @@ export default class Buffer {
     /**
      * Returns the dimension the buffer was created for.
      *
-     * @returns The dimension the buffer was created for.
+     * @returns {string} The dimension the buffer was created for.
      */
     getDimension() {
         if (this.#isClosed) {
@@ -122,7 +135,7 @@ export default class Buffer {
     /**
      * Returns the current offset of the buffer.
      *
-     * @returns The offset of the buffer.
+     * @returns {number} The offset of the buffer.
      */
     getOffset() {
         if (this.#isClosed) {
@@ -135,8 +148,8 @@ export default class Buffer {
     /**
      * Returns the current offset of the buffer as a location.
      *
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The offset of the buffer in the form of `[x, z, slot]`.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {[x: number, z: number, slot: number]} The offset of the buffer in the form of `[x, z, slot]`.
      */
     getOffsetLocation(offset = this.#offset) {
         if (this.#isClosed) {
@@ -156,7 +169,7 @@ export default class Buffer {
     /**
      * Returns the number of used bytes in the buffer.
      *
-     * @returns The number of used bytes.
+     * @returns {number} The number of used bytes.
      */
     getUsedBytes() {
         if (this.#isClosed) {
@@ -178,8 +191,9 @@ export default class Buffer {
     /**
      * Saves the buffer to the world data so i can be loaded again later. (Doesn't close the buffer)
      *
-     * @param {*} saveName The name for the buffer to be save as.
-     * @param {*} override Whether to override an existing buffer with the same name. (Default: false)
+     * @param {string} saveName The name for the buffer to be save as.
+     * @param {boolean} override Whether to override an existing buffer with the same name. (Default: false)
+     * @returns {void}
      *
      * @throws Error if buffer is empty.
      * @experimental This is an experimental feature and is not guaranteed to stay.
@@ -209,21 +223,22 @@ export default class Buffer {
             throw new Error(`A buffer with the name ${saveName} already exists! Set override argument to true to override the existing buffer.`);
         }
 
-        world.structureManager.createFromWorld(`dynamic_data_storage_file:${saveName}`, this.#dimension, {x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}, {saveMode: StructureSaveMode.World, includeEntities: false});
+        world.structureManager.createFromWorld(`dynamic_data_storage_file:${saveName}`, world.getDimension(this.#dimension), {x:0, y:this.#dimensionMinY, z:0}, {x:47, y:this.#dimensionMinY, z:47}, {saveMode: StructureSaveMode.World, includeEntities: false});
     }
 
     /**
      * Changes the buffers reading position to the specified offset.
      *
-     * @param {*} offset The new offset location.
+     * @param {number} offset The new offset location.
+     * @returns {void}
      */
     setOffset(offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (offset < 0 && offset > MAX_SIZE) {
-            throw new Error("Invalid offset. Must be between 0 and " + MAX_SIZE);
+        if (offset < 0 && offset > Buffer.MAX_SIZE) {
+            throw new Error("Invalid offset. Must be between 0 and " + Buffer.MAX_SIZE);
         }
         this.#offset = offset;
     }
@@ -231,7 +246,8 @@ export default class Buffer {
     /**
      * Loads a saved buffer from the world data.
      *
-     * @param {*} saveName The name of the saved buffer to load.
+     * @param {string} saveName The name of the saved buffer to load.
+     * @returns {void}
      *
      * @throws `Error` if another buffer is already loaded or `saveName` doesn't exist.
      * @experimental This is an experimental feature and is not guaranteed to stay.
@@ -266,8 +282,9 @@ export default class Buffer {
     /**
      * Removes `removeByteCount` bytes from the buffer left to right at the specified offset.
      *
-     * @param {*} removeByteCount The number of bytes to remove.
-     * @param {*} offset The starting offset of the buffer to remove from.
+     * @param {number} removeByteCount The number of bytes to remove.
+     * @param {number} offset The starting offset of the buffer to remove from.
+     * @returns {void}
      *
      * @throws `Error` if there is nothing to remove at the specified offset.
      */
@@ -288,8 +305,8 @@ export default class Buffer {
         for (let i = offset; i < (offset + removeByteCount); i++) {
             let [x, z, slot] = this.getOffsetLocation(i);
 
-            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
-            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+            let block = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z}));
+            /** @type {Container} */ (/** @type {BlockInventoryComponent} */ (block.getComponent("inventory")).container).setItem(slot, new ItemStack("minecraft:air"));
         }
 
         // Shift the remaining bytes to the left.
@@ -298,18 +315,20 @@ export default class Buffer {
 
             let value = this.#read(i);
 
-            let block = world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z});
-            block.getComponent("inventory").container.setItem(slot, new ItemStack("minecraft:air"));
+            let block = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x, y:this.#dimensionMinY, z}));
+            /** @type {Container} */ (/** @type {BlockInventoryComponent} */ (block.getComponent("inventory")).container).setItem(slot, new ItemStack("minecraft:air"));
 
             this.#write(value, offset + j++);
         }
+
+        this.#offset -= removeByteCount;
     }
 
     /**
      * Reads a boolean from the buffer at the specified offset.
      *
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The boolean read from the buffer.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {boolean} The boolean read from the buffer.
      */
     readBoolean(offset = this.#offset) {
         if (this.#isClosed) {
@@ -328,8 +347,8 @@ export default class Buffer {
     /**
      * Reads a unsigned byte from the buffer at the specified offset.
      *
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The unsigned byte read from the buffer.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The unsigned byte read from the buffer.
      */
     readUByte(offset = this.#offset) {
         if (this.#isClosed) {
@@ -348,8 +367,8 @@ export default class Buffer {
     /**
      * Reads a byte from the buffer at the specified offset.
      *
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The byte read from the buffer.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The byte read from the buffer.
      */
     readByte(offset = this.#offset) {
         if (this.#isClosed) {
@@ -368,9 +387,9 @@ export default class Buffer {
     /**
      * Reads a unsigned short from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The unsigned short read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The unsigned short read from the buffer.
      */
     readUShort(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -381,6 +400,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        /** @type {number} */
         let value = littleEndian
             ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8)
             : ((this.#read(offset) & 0xFF) << 8) | (this.#read(offset + 1) & 0xFF);
@@ -392,9 +412,9 @@ export default class Buffer {
     /**
      * Reads a short from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The short read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The short read from the buffer.
      */
     readShort(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -405,6 +425,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        /** @type {number} */
         let value = littleEndian
             ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8)
             : ((this.#read(offset) & 0xFF) << 8) | (this.#read(offset + 1) & 0xFF);
@@ -416,9 +437,9 @@ export default class Buffer {
     /**
      * Reads a unsigned integer from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The unsigned integer read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The unsigned integer read from the buffer.
      */
     readUInt(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -429,6 +450,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        /** @type {number} */
         let value = littleEndian
             ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24)
             : ((this.#read(offset) & 0xFF) << 24) | ((this.#read(offset + 1) & 0xFF) << 16) | ((this.#read(offset + 2) & 0xFF) << 8) | (this.#read(offset + 3) & 0xFF);
@@ -440,9 +462,9 @@ export default class Buffer {
     /**
      * Reads a integer from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The integer read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The integer read from the buffer.
      */
     readInt(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -453,6 +475,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        /** @type {number} */
         let value = littleEndian
             ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24)
             : ((this.#read(offset) & 0xFF) << 24) | ((this.#read(offset + 1) & 0xFF) << 16) | ((this.#read(offset + 2) & 0xFF) << 8) | (this.#read(offset + 3) & 0xFF);
@@ -464,9 +487,9 @@ export default class Buffer {
     /**
      * Reads a unsigned long from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The unsigned long read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The unsigned long read from the buffer.
      */
     readULong(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -477,6 +500,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        /** @type {number} */
         let value = littleEndian
             ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24) | ((this.#read(offset + 4) & 0xFF) << 32) | ((this.#read(offset + 5) & 0xFF) << 40) | ((this.#read(offset + 6) & 0xFF) << 48) | ((this.#read(offset + 7) & 0xFF) << 56)
             : ((this.#read(offset) & 0xFF) << 56) | ((this.#read(offset + 1) & 0xFF) << 48) | ((this.#read(offset + 2) & 0xFF) << 40) | ((this.#read(offset + 3) & 0xFF) << 32) | ((this.#read(offset + 4) & 0xFF) << 24) | ((this.#read(offset + 5) & 0xFF) << 16) | ((this.#read(offset + 6) & 0xFF) << 8) | (this.#read(offset + 7) & 0xFF);
@@ -488,9 +512,9 @@ export default class Buffer {
     /**
      * Reads a long from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The long read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The long read from the buffer.
      */
     readLong(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -501,6 +525,7 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        /** @type {number} */
         let value = littleEndian
             ? (this.#read(offset) & 0xFF) | ((this.#read(offset + 1) & 0xFF) << 8) | ((this.#read(offset + 2) & 0xFF) << 16) | ((this.#read(offset + 3) & 0xFF) << 24) | ((this.#read(offset + 4) & 0xFF) << 32) | ((this.#read(offset + 5) & 0xFF) << 40) | ((this.#read(offset + 6) & 0xFF) << 48) | ((this.#read(offset + 7) & 0xFF) << 56)
             : ((this.#read(offset) & 0xFF) << 56) | ((this.#read(offset + 1) & 0xFF) << 48) | ((this.#read(offset + 2) & 0xFF) << 40) | ((this.#read(offset + 3) & 0xFF) << 32) | ((this.#read(offset + 4) & 0xFF) << 24) | ((this.#read(offset + 5) & 0xFF) << 16) | ((this.#read(offset + 6) & 0xFF) << 8) | (this.#read(offset + 7) & 0xFF);
@@ -512,9 +537,9 @@ export default class Buffer {
     /**
      * Reads a float from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The float read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The float read from the buffer.
      */
     readFloat(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -540,9 +565,9 @@ export default class Buffer {
     /**
      * Reads a double from the buffer at the specified offset.
      *
-     * @param {*} littleEndian Whether the value should be read as a little-endian value.
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The double read from the buffer.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value.
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {number} The double read from the buffer.
      */
     readDouble(littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -572,10 +597,10 @@ export default class Buffer {
     /**
      * Reads a string from the buffer at the specified offset.
      *
-     * @param {*} charSet The character set of the string.
-     * @param {*} littleEndian Whether the value should be read as a little-endian value. (Only applicable for UTF-16)
-     * @param {*} offset The offset of the buffer to read from.
-     * @returns The string read from the buffer.
+     * @param {CharSets} charSet The character set of the string.
+     * @param {boolean} littleEndian Whether the value should be read as a little-endian value. (Only applicable for UTF-16)
+     * @param {number} offset The offset of the buffer to read from.
+     * @returns {string} The string read from the buffer.
      */
     readString(charSet = CharSets.UTF8, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -589,6 +614,7 @@ export default class Buffer {
         let length = this.readUShort(littleEndian, offset);
         offset += 2;
 
+        /** @type {number[]} */
         let strBytes = [];
         for (let i = 0; i < length; i++) {
             strBytes.push(this.#read(offset + i));
@@ -604,27 +630,33 @@ export default class Buffer {
     /**
      * Writes a boolean to the buffer at the specified offset.
      *
-     * @param {*} value The boolean to write to the buffer.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {boolean} value The boolean to write to the buffer.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeBoolean(value, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
+        if (Buffer.MAX_SIZE - offset < 1) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         if (arguments.length > 1) {
             this.#offset = offset;
         }
 
-        this.#write((value & 0xFF) ? 1 : 0, offset);
+        this.#write(value ? 1 : 0, offset);
         this.#offset += 1;
     }
 
     /**
      * Writes a unsigned byte to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned byte to write to the buffer.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The unsigned byte to write to the buffer.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeUByte(value, offset = this.#offset) {
         if (this.#isClosed) {
@@ -633,6 +665,10 @@ export default class Buffer {
 
         if (value < 0 || value > 255) {
             throw new Error(`Invaild value for type: unsigned byte. Value must be between 0 and 255. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 1) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 1) {
@@ -647,8 +683,9 @@ export default class Buffer {
     /**
      * Writes a byte to the buffer at the specified offset.
      *
-     * @param {*} value The byte to write to the buffer.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The byte to write to the buffer.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeByte(value, offset = this.#offset) {
         if (this.#isClosed) {
@@ -657,6 +694,10 @@ export default class Buffer {
 
         if (value < -128 || value > 127) {
             throw new Error(`Invaild value for type: byte. Value must be between -128 and 127. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 1) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 1) {
@@ -671,9 +712,10 @@ export default class Buffer {
     /**
      * Writes a unsigned short to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned short to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The unsigned short to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeUShort(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -682,6 +724,10 @@ export default class Buffer {
 
         if (value < 0 || value > 65_535) {
             throw new Error(`Invaild value for type: unsigned short. Value must be between 0 and 65,535. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 2) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -701,9 +747,10 @@ export default class Buffer {
     /**
      * Writes a short to the buffer at the specified offset.
      *
-     * @param {*} value The short to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The short to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeShort(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -712,6 +759,10 @@ export default class Buffer {
 
         if (value < -32_768 || value > 32_767) {
             throw new Error(`Invaild value for type: short. Value must be between -32,768 and 32,767. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 2) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -731,9 +782,10 @@ export default class Buffer {
     /**
      * Writes a unsigned integer to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned integer to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The unsigned integer to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeUInt(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -742,6 +794,10 @@ export default class Buffer {
 
         if (value < 0 || value > 4_294_967_295) {
             throw new Error(`Invaild value for type: unsigned int. Value must be between 0 and 4,294,967,295. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 4) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -761,9 +817,10 @@ export default class Buffer {
     /**
      * Writes a integer to the buffer at the specified offset.
      *
-     * @param {*} value The integer to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The integer to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeInt(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -772,6 +829,10 @@ export default class Buffer {
 
         if (value < -2_147_483_648 || value > 2_147_483_647) {
             throw new Error(`Invaild value for type: int. Value must be between -2,147,483,648 and 2,147,483,647. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 4) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -791,9 +852,10 @@ export default class Buffer {
     /**
      * Writes a unsigned long to the buffer at the specified offset.
      *
-     * @param {*} value The unsigned long to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The unsigned long to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeULong(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -802,6 +864,10 @@ export default class Buffer {
 
         if (value < 0 || value > 18_446_744_073_709_551_615n) {
             throw new Error(`Invaild value for type: unsigned long. Value must be between 0 and 18,446,744,073,709,551,615. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 8) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -821,9 +887,10 @@ export default class Buffer {
     /**
      * Writes a long to the buffer at the specified offset.
      *
-     * @param {*} value The long to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The long to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeLong(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -832,6 +899,10 @@ export default class Buffer {
 
         if (value < -9_223_372_036_854_775_808n || value > 9_223_372_036_854_775_807n) {
             throw new Error(`Invaild value for type: long. Value must be between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 8) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -851,9 +922,10 @@ export default class Buffer {
     /**
      * Writes a float to the buffer at the specified offset.
      *
-     * @param {*} value The float to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The float to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeFloat(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -862,6 +934,10 @@ export default class Buffer {
 
         if (value < (1.4 * Math.pow(10, -45)) || value > (3.4 * Math.pow(10, 38))) {
             throw new Error(`Invaild value for type: float. Value must be between ${1.4 * Math.pow(10, -45)} and ${3.4 * Math.pow(10, 38)}. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 4) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -875,7 +951,7 @@ export default class Buffer {
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write(bytes[i], offset + i);
+            this.#write(/** @type {number} */ (bytes[i]), offset + i);
         }
         this.#offset += 4;
     }
@@ -883,9 +959,10 @@ export default class Buffer {
     /**
      * Writes a double to the buffer at the specified offset.
      *
-     * @param {*} value The double to write to the buffer.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value.
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {number} value The double to write to the buffer.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value.
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeDouble(value, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
@@ -894,6 +971,10 @@ export default class Buffer {
 
         if (value < (4.9 * Math.pow(10, -324)) || value > (1.8 * Math.pow(10, 308))) {
             throw new Error(`Invaild value for type: double. Value must be between ${4.9 * Math.pow(10, -324)} and ${1.8 * Math.pow(10, 308)}. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - offset < 8) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 2) {
@@ -907,7 +988,7 @@ export default class Buffer {
         let bytes = new Uint8Array(buffer);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write(bytes[i], offset + i);
+            this.#write(/** @type {number} */ (bytes[i]), offset + i);
         }
         this.#offset += 8;
     }
@@ -915,14 +996,19 @@ export default class Buffer {
     /**
      * Writes a string to the buffer at the specified offset.
      *
-     * @param {*} value The string to write to the buffer.
-     * @param {*} charSet The character set of the string.
-     * @param {*} littleEndian Whether the value should be written as a little-endian value. (Only applicable for UTF-16)
-     * @param {*} offset The offset of the buffer to write to.
+     * @param {string} value The string to write to the buffer.
+     * @param {CharSets} charSet The character set of the string.
+     * @param {boolean} littleEndian Whether the value should be written as a little-endian value. (Only applicable for UTF-16)
+     * @param {number} offset The offset of the buffer to write to.
+     * @returns {void}
      */
     writeString(value, charSet = CharSets.UTF8, littleEndian = false, offset = this.#offset) {
         if (this.#isClosed) {
             throw new Error("Unable to do operation. Buffer is closed!");
+        }
+
+        if (Buffer.MAX_SIZE - offset < (value.length + 2)) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 3) {
@@ -933,21 +1019,25 @@ export default class Buffer {
         let bytes = encoder.encode(value, littleEndian);
 
         for (let i = 0; i < bytes.length; i++) {
-            this.#write(bytes[i], offset + i);
+            this.#write(/** @type {number} */ (bytes[i]), offset + i);
         }
         this.#offset += bytes.length;
     }
 
+    /**
+     * @param {number} offset
+     * @returns {number}
+     */
     #read(offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
-        let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
+        let dataBlock = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ}));
 
         if (dataBlock.typeId != "minecraft:barrel") {
             throw new Error("Offset out of bounds. Nothing to read at: " + offset);
         }
 
-        let dataSlot = dataBlock.getComponent("inventory").container.getItem(blockSlot);
+        let dataSlot = /** @type {ItemStack} */ (/** @type {Container} */ (/** @type {BlockInventoryComponent} */ (dataBlock.getComponent("inventory")).container).getItem(blockSlot));
 
         switch (dataSlot.typeId) {
             case "minecraft:tinted_glass":
@@ -965,10 +1055,15 @@ export default class Buffer {
         }
     }
 
+    /**
+     * @param {number} value
+     * @param {number} offset
+     * @returns {void}
+     */
     #write(value, offset = this.#offset) {
         let [blockX, blockZ, blockSlot] = this.getOffsetLocation(offset);
 
-        let dataBlock = world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ});
+        let dataBlock = /** @type {Block} */ (world.getDimension(this.#dimension).getBlock({x:blockX, y:this.#dimensionMinY, z:blockZ}));
 
         if (dataBlock.typeId != "minecraft:barrel") {
             world.getDimension(this.#dimension).setBlockPermutation({x:blockX, y:this.#dimensionMinY, z:blockZ}, BlockPermutation.resolve("minecraft:barrel", {"facing_direction": 0}));
@@ -987,6 +1082,6 @@ export default class Buffer {
             itemStack = new ItemStack("minecraft:black_stained_glass", value - 192);
         }
 
-        dataBlock.getComponent("inventory").container.setItem(blockSlot, itemStack);
+        /** @type {Container} */ (/** @type {BlockInventoryComponent} */ (dataBlock.getComponent("inventory")).container).setItem(blockSlot, itemStack);
     }
 }
