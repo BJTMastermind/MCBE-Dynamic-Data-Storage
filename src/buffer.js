@@ -320,6 +320,8 @@ export default class Buffer {
 
             this.#write(value, offset + j++);
         }
+
+        this.#offset -= removeByteCount;
     }
 
     /**
@@ -641,6 +643,10 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 1) < 1) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         this.#write(value ? 1 : 0, offset);
         this.#offset += 1;
     }
@@ -659,6 +665,10 @@ export default class Buffer {
 
         if (value < 0 || value > 255) {
             throw new Error(`Invaild value for type: unsigned byte. Value must be between 0 and 255. Got: ${value}`);
+        }
+
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 1) < 1) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         if (arguments.length > 1) {
@@ -690,6 +700,10 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 1) < 1) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         let byte = (value & 0xFF);
         this.#write(byte, offset);
         this.#offset += 1;
@@ -714,6 +728,10 @@ export default class Buffer {
 
         if (arguments.length > 2) {
             this.#offset = offset;
+        }
+
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 2) < 2) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         for (let i = 0; i < 2; i++) {
@@ -747,6 +765,10 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 2) < 2) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         for (let i = 0; i < 2; i++) {
             let byte = littleEndian
                 ? ((value >> (i * 8)) & 0xFF)
@@ -776,6 +798,10 @@ export default class Buffer {
 
         if (arguments.length > 2) {
             this.#offset = offset;
+        }
+
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 4) < 4) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         for (let i = 0; i < 4; i++) {
@@ -809,6 +835,10 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 4) < 4) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         for (let i = 0; i < 4; i++) {
             let byte = littleEndian
                 ? ((value >> (i * 8)) & 0xFF)
@@ -838,6 +868,10 @@ export default class Buffer {
 
         if (arguments.length > 2) {
             this.#offset = offset;
+        }
+
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 8) < 8) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         for (let i = 0; i < 8; i++) {
@@ -871,6 +905,10 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 8) < 8) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         for (let i = 0; i < 8; i++) {
             let byte = littleEndian
                 ? ((value >> (i * 8)) & 0xFF)
@@ -900,6 +938,10 @@ export default class Buffer {
 
         if (arguments.length > 2) {
             this.#offset = offset;
+        }
+
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 4) < 4) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         const buffer = new ArrayBuffer(4);
@@ -935,6 +977,10 @@ export default class Buffer {
             this.#offset = offset;
         }
 
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + 8) < 8) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
+        }
+
         const buffer = new ArrayBuffer(8);
         const view = new DataView(buffer);
 
@@ -963,6 +1009,10 @@ export default class Buffer {
 
         if (arguments.length > 3) {
             this.#offset = offset;
+        }
+
+        if (Buffer.MAX_SIZE - (this.getUsedBytes() + (value.length + 2)) < (value.length + 2)) {
+            throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
         let encoder = new Encoder(charSet);
