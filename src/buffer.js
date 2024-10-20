@@ -639,7 +639,7 @@ export default class Buffer {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (Buffer.MAX_SIZE - (offset + 1) < 1) {
+        if (Buffer.MAX_SIZE - offset < 1) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -667,7 +667,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned byte. Value must be between 0 and 255. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 1) < 1) {
+        if (Buffer.MAX_SIZE - offset < 1) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -696,7 +696,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: byte. Value must be between -128 and 127. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 1) < 1) {
+        if (Buffer.MAX_SIZE - offset < 1) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -726,7 +726,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned short. Value must be between 0 and 65,535. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 2) < 2) {
+        if (Buffer.MAX_SIZE - offset < 2) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -761,7 +761,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: short. Value must be between -32,768 and 32,767. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 2) < 2) {
+        if (Buffer.MAX_SIZE - offset < 2) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -796,7 +796,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned int. Value must be between 0 and 4,294,967,295. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 4) < 4) {
+        if (Buffer.MAX_SIZE - offset < 4) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -831,7 +831,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: int. Value must be between -2,147,483,648 and 2,147,483,647. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 4) < 4) {
+        if (Buffer.MAX_SIZE - offset < 4) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -866,7 +866,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: unsigned long. Value must be between 0 and 18,446,744,073,709,551,615. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 8) < 8) {
+        if (Buffer.MAX_SIZE - offset < 8) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -901,7 +901,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: long. Value must be between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 8) < 8) {
+        if (Buffer.MAX_SIZE - offset < 8) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -936,7 +936,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: float. Value must be between ${1.4 * Math.pow(10, -45)} and ${3.4 * Math.pow(10, 38)}. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 4) < 4) {
+        if (Buffer.MAX_SIZE - offset < 4) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -973,7 +973,7 @@ export default class Buffer {
             throw new Error(`Invaild value for type: double. Value must be between ${4.9 * Math.pow(10, -324)} and ${1.8 * Math.pow(10, 308)}. Got: ${value}`);
         }
 
-        if (Buffer.MAX_SIZE - (offset + 8) < 8) {
+        if (Buffer.MAX_SIZE - offset < 8) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
@@ -1007,7 +1007,7 @@ export default class Buffer {
             throw new Error("Unable to do operation. Buffer is closed!");
         }
 
-        if (Buffer.MAX_SIZE - (offset + (value.length + 2)) < (value.length + 2)) {
+        if (Buffer.MAX_SIZE - offset < (value.length + 2)) {
             throw new Error("Buffer Overflow! Failed to write to buffer, not enough space.");
         }
 
