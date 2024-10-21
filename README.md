@@ -155,11 +155,13 @@ buffer.writeDouble();
 buffer.writeString();
 
 // other
-buffer.MAX_SIZE;
+Buffer.MAX_SIZE;
 buffer.clear();
 buffer.getDimension();
 buffer.getOffset();
 buffer.getOffsetLocation();
+buffer.getUsedBytes();
+buffer.remove();
 buffer.setOffset();
 ```
 </details>
