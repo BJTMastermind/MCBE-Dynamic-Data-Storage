@@ -155,11 +155,13 @@ buffer.writeDouble();
 buffer.writeString();
 
 // other
-buffer.MAX_SIZE;
+Buffer.MAX_SIZE;
 buffer.clear();
 buffer.getDimension();
 buffer.getOffset();
 buffer.getOffsetLocation();
+buffer.getUsedBytes();
+buffer.remove();
 buffer.setOffset();
 ```
 </details>
@@ -192,7 +194,7 @@ You should now have a `scripts` folder generated with a single file in it called
 
 All data written from this library is stored in a 48x48 area under X0,Z0 at the bottom of the world in the dimension it was told to be saved in. (Defaults to the overworld)
 
-## Language(s) Used
+## Language(s) and Technologies Used
 
 * Javascript 2024
 * Node v21.7.3
