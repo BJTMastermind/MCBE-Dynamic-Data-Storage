@@ -1,2 +1,2 @@
-export * from "./charsets.js";
-export * from "./encoder.js";
+export * from "./charsets.ts";
+export * from "./encoder.ts";

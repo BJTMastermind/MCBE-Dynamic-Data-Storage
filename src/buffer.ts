@@ -1,6 +1,6 @@
 import { Block, BlockPermutation, BlockVolume, DimensionTypes, ItemStack, world } from "@minecraft/server";
-import Encoder from "./utils/encoder.js";
-import { CharSets } from "./utils/charsets.js";
+import Encoder from "./utils/encoder.ts";
+import { CharSets } from "./utils/charsets.ts";
 
 /**
  * A class for parsing and writing binary data to and from a multi-barrel based buffer within a Minecraft world.
