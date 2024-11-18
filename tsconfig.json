@@ -1,7 +1,5 @@
 {
     "compilerOptions": {
-        "allowJs": true,
-        "checkJs": true,
         "module": "ES2022",
         "moduleResolution": "Node10",
         "target": "ES2022",
@@ -13,6 +11,7 @@
         "noPropertyAccessFromIndexSignature": true,
         "noUncheckedIndexedAccess": true,
         "allowUnreachableCode": false,
+        "allowImportingTsExtensions": true,
         "noUnusedLocals": true,
         "allowUnusedLabels": false,
         "noUnusedParameters": true
