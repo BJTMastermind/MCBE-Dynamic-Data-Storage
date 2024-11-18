@@ -118,7 +118,7 @@ Now that you have it imported you will have the following methods avalible to us
 
 <details open>
 <summary>
-<b><i>Stable functions</i></b>
+<b><i>Functions</i></b>
 <p></p>
 </summary>
 
@@ -166,20 +166,6 @@ buffer.setOffset();
 ```
 </details>
 
-<details>
-<summary>
-<b><i>Experimental (Deprecated) functions</i></b>
-<p></p>
-</summary>
-
-```js
-buffer.close();
-buffer.delete();
-buffer.save();
-buffer.load();
-```
-</details>
-
 All methods have doc strings for extra details about how to use them and what they are for.
 
 Once your ready to test your scripts in-game, open your terminal in the root folder of your pack and run:
@@ -196,5 +182,5 @@ All data written from this library is stored in a 48x48 area under X0,Z0 at the 
 
 ## Language(s) and Technologies Used
 
-* Javascript 2024
+* Typescript 5.6.3
 * Node v21.7.3
