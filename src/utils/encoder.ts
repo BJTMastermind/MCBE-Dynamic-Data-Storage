@@ -1,18 +1,14 @@
-import { CharSets } from "./charsets.js"
+import { CharSets } from "./charsets.ts"
 
 /**
  * A class for encoding and decoding strings to and from byte arrays.
  */
 export default class Encoder {
-    /** @type {CharSets} */
-    #charSet
+    private charSet: CharSets;
 
-    /**
-     * @param {CharSets} charSet
-     */
     constructor(charSet = CharSets.UTF8) {
         if (Object.values(CharSets).includes(charSet)) {
-            this.#charSet = charSet;
+            this.charSet = charSet;
         } else {
             throw new Error(`"${charSet}" Is not a vaild CharSet.`);
         }
@@ -21,39 +17,43 @@ export default class Encoder {
     /**
      * Returns the current CharSet of this Encoder.
      *
-     * @returns {CharSets} The charSet
+     * @returns The charSet
      */
     getCharSet() {
-        return this.#charSet;
+        return this.charSet;
     }
 
     /**
      * Encodes a string to a byte array in the selected CharSet.
      *
-     * @param {string} string
-     * @returns {number[]} The encoded string as a byte array.
+     * @param string
+     * @returns The encoded string as a byte array.
      */
-    encode(string, littleEndian = false) {
-        switch (this.#charSet) {
+    encode(string: string, littleEndian: boolean = false): number[] {
+        switch (this.charSet) {
             case "utf8":
                 return encodeUTF8(string);
             case "utf16":
                 return encodeUTF16(string, littleEndian);
+            default:
+                throw new Error(`"${this.charSet}" Is not a vaild CharSet.`);
         }
     }
 
     /**
      * Decodes a byte array to a string in the selected CharSet.
      *
-     * @param {number[]} bytes
-     * @returns {string} The decoded byte array as a string.
+     * @param bytes
+     * @returns The decoded byte array as a string.
      */
-    decode(bytes, littleEndian = false) {
-        switch (this.#charSet) {
+    decode(bytes: number[], littleEndian: boolean = false): string {
+        switch (this.charSet) {
             case "utf8":
                 return decodeUTF8(bytes);
             case "utf16":
                 return decodeUTF16(bytes, littleEndian);
+            default:
+                throw new Error(`"${this.charSet}" Is not a vaild CharSet.`);
         }
     }
 }
@@ -62,17 +62,11 @@ export default class Encoder {
 ////////// Encoding Functions //////////
 ////////////////////////////////////////
 
-/**
- * @param {string} str
- * @returns {number[]}
- */
-function encodeUTF8(str) {
-    /** @type {number[]} */
-    let bytes = [];
+function encodeUTF8(str: string) {
+    let bytes: number[] = [];
 
     for (let i = 0; i < str.length; i++) {
-        /** @type {number} */
-        let codePoint = /** @type {number} */ (str.codePointAt(i));
+        let codePoint: number = str.codePointAt(i)!;
 
         // Skip surrogate pairs
         if (codePoint > 0xFFFF) {
@@ -108,31 +102,21 @@ function encodeUTF8(str) {
     }
 
     // Add prefixed 2 byte length
-    /** @type {number[]} */
-    let result = concatArray(numberToBytes(bytes.length, 2), bytes);
+    let result: number[] = concatArray(numberToBytes(bytes.length, 2), bytes);
 
     return result;
 }
 
-/**
- * @param {string} str
- * @param {boolean} littleEndian
- * @returns {number[]}
- */
-function encodeUTF16(str, littleEndian = false) {
-    /** @type {number[]} */
-    let bytes = [];
+function encodeUTF16(str: string, littleEndian: boolean = false): number[] {
+    let bytes: number[] = [];
 
     for (let i = 0; i < str.length; i++) {
-        /** @type {number} */
-        let codePoint = /** @type {number} */ (str.codePointAt(i));
+        let codePoint: number = str.codePointAt(i)!;
 
         if (codePoint > 0xFFFF) {
             codePoint -= 0x10000;
-            /** @type {number} */
-            let highSurrogate;
-            /** @type {number} */
-            let lowSurrogate;
+            let highSurrogate: number;
+            let lowSurrogate: number;
 
             if (littleEndian) {
                 highSurrogate = (codePoint >> 10) | 0xD800;
@@ -160,8 +144,7 @@ function encodeUTF16(str, littleEndian = false) {
     }
 
     // Add prefixed 2 byte length
-    /** @type {number[]} */
-    let result = concatArray(numberToBytes(bytes.length, 2, littleEndian), bytes);
+    let result: number[] = concatArray(numberToBytes(bytes.length, 2, littleEndian), bytes);
 
     return result;
 }
@@ -170,17 +153,11 @@ function encodeUTF16(str, littleEndian = false) {
 ////////// Decoding Functions //////////
 ////////////////////////////////////////
 
-/**
- * @param {number[]} bytes
- * @returns {string}
- */
-function decodeUTF8(bytes) {
-    /** @type {string} */
-    let str = "";
+function decodeUTF8(bytes: number[]) {
+    let str: string = "";
 
     for (let i = 0; i < bytes.length; i++) {
-        /** @type {number} */
-        let byte = /** @type {number} */ (bytes[i]);
+        let byte: number = bytes[i]!;
 
         // 1 byte character
         if (byte <= 0x7F) {
@@ -190,12 +167,9 @@ function decodeUTF8(bytes) {
 
         // 2 byte character
         if ((byte & 0xE0) === 0xC0) {
-            /** @type {number} */
-            let byte1 = byte & 0x1F;
-            /** @type {number} */
-            let byte2 = /** @type {number} */ (bytes[++i]);
-            /** @type {number} */
-            let codePoint = (byte1 << 6) | byte2;
+            let byte1: number = byte & 0x1F;
+            let byte2: number = bytes[++i]!;
+            let codePoint: number = (byte1 << 6) | byte2;
 
             str += String.fromCodePoint(codePoint);
             continue;
@@ -203,14 +177,10 @@ function decodeUTF8(bytes) {
 
         // 3 byte character
         if ((byte & 0xF0) === 0xE0) {
-            /** @type {number} */
-            let byte1 = byte & 0x0F;
-            /** @type {number} */
-            let byte2 = /** @type {number} */ (bytes[++i]);
-            /** @type {number} */
-            let byte3 = /** @type {number} */ (bytes[++i]);
-            /** @type {number} */
-            let codePoint = (byte1 << 12) | (byte2 << 6) | byte3;
+            let byte1: number = byte & 0x0F;
+            let byte2: number = bytes[++i]!;
+            let byte3: number = bytes[++i]!;
+            let codePoint: number = (byte1 << 12) | (byte2 << 6) | byte3;
 
             str += String.fromCodePoint(codePoint);
             continue;
@@ -218,16 +188,11 @@ function decodeUTF8(bytes) {
 
         // 4 byte character
         if ((byte & 0xF8) === 0xF0) {
-            /** @type {number} */
-            let byte1 = byte & 0x07;
-            /** @type {number} */
-            let byte2 = /** @type {number} */ (bytes[++i]);
-            /** @type {number} */
-            let byte3 = /** @type {number} */ (bytes[++i]);
-            /** @type {number} */
-            let byte4 = /** @type {number} */ (bytes[++i]);
-            /** @type {number} */
-            let codePoint = (byte1 << 18) | (byte2 << 12) | (byte3 << 6) | byte4;
+            let byte1: number = byte & 0x07;
+            let byte2: number = bytes[++i]!;
+            let byte3: number = bytes[++i]!;
+            let byte4: number = bytes[++i]!;
+            let codePoint: number = (byte1 << 18) | (byte2 << 12) | (byte3 << 6) | byte4;
 
             str += String.fromCodePoint(codePoint);
             continue;
@@ -237,33 +202,23 @@ function decodeUTF8(bytes) {
     return str;
 }
 
-/**
- * @param {number[]} bytes
- * @param {boolean} littleEndian
- * @returns {string}
- */
-function decodeUTF16(bytes, littleEndian = false) {
-    /** @type {string} */
-    let str = "";
+function decodeUTF16(bytes: number[], littleEndian: boolean = false) {
+    let str: string = "";
 
     for (let i = 0; i < bytes.length; i += 2) {
-        /** @type {number} */
-        let value = littleEndian
-            ? /** @type {number} */ (bytes[i]) | (/** @type {number} */ (bytes[i + 1]) << 8)
-            : (/** @type {number} */ (bytes[i]) << 8) | /** @type {number} */ (bytes[i + 1]);
+        let value: number = littleEndian
+            ? bytes[i]! | (bytes[i + 1]! << 8)
+            : (bytes[i]! << 8) | bytes[i + 1]!;
 
         if (value >= 0xD800 && value <= 0xDFFF) {
-            /** @type {number} */
-            let highSurrogate = value;
+            let highSurrogate: number = value;
             i += 2;
 
-            /** @type {number} */
-            let lowSurrogate = littleEndian
-                ? /** @type {number} */ (bytes[i + 1]) | (/** @type {number} */ (bytes[i]) << 8)
-                : (/** @type {number} */ (bytes[i]) << 8) | /** @type {number} */ (bytes[i + 1]);
+            let lowSurrogate: number = littleEndian
+                ? bytes[i + 1]! | (bytes[i]! << 8)
+                : (bytes[i]! << 8) | bytes[i + 1]!;
 
-                /** @type {number} */
-            let codePoint = littleEndian
+            let codePoint: number = littleEndian
                 ? 0x10000 + (lowSurrogate & 0xDC00) | ((highSurrogate & 0xD800) << 10)
                 : 0x10000 + ((highSurrogate & 0xD800) << 10) | (lowSurrogate & 0xDC00);
 
@@ -281,17 +236,10 @@ function decodeUTF16(bytes, littleEndian = false) {
 ////////// Helper Functions //////////
 //////////////////////////////////////
 
-/**
- * @param {number} value
- * @param {number} byteCount
- * @param {boolean} littleEndian
- * @returns {number[]}
- */
-function numberToBytes(value, byteCount, littleEndian = false) {
-    /** @type {number[]} */
-    let result = [];
+function numberToBytes(value: number, byteCount: number, littleEndian: boolean = false): number[] {
+    let result: number[] = [];
     for (let i = 0; i < byteCount; i++) {
-        let byte = littleEndian
+        let byte: number = littleEndian
             ? ((value >> (i * 8)) & 0xFF)
             : ((value >> ((byteCount - 1 - i) * 8)) & 0xFF);
 
@@ -300,17 +248,10 @@ function numberToBytes(value, byteCount, littleEndian = false) {
     return result;
 }
 
-/**
- * @template T
- * @param {T[]} array1
- * @param {T[]} array2
- * @returns {T[]}
- */
-function concatArray(array1, array2) {
-    /** @type {T[]} */
-    let result = [];
+function concatArray(array1: number[], array2: number[]): number[] {
+    let result: number[] = [];
     for (let i = 0; i < (array1.length + array2.length); i++) {
-        result.push(i < array1.length ? /** @type {T} */ (array1[i]) : /** @type {T} */ (array2[i - array1.length]));
+        result.push(i < array1.length ? array1[i]! : array2[i - array1.length]!);
     }
     return result;
 }
