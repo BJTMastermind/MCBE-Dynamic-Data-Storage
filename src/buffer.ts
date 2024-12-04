@@ -6,7 +6,7 @@ import { CharSets } from "./utils/charsets.ts";
  * A class for parsing and writing binary data to and from a multi-barrel based buffer within a Minecraft world.
  */
 export default class Buffer {
-    public static readonly MAX_SIZE: number = 48*48*27;
+    public static readonly MAX_SIZE: number = 16*16*27;
 
     private offset: number = 0;
     private dimensionMinY: number = -64;
@@ -31,17 +31,37 @@ export default class Buffer {
         let checkBlock: Block = checkDimension.getBlock({x:0, y:this.dimensionMinY, z:0})!;
 
         if (checkBlock != undefined && checkBlock.typeId != "minecraft:air" && checkBlock.typeId != "minecraft:barrel") {
-            checkDimension.runCommand(`tickingarea add 0 ${this.dimensionMinY} 0 47 ${this.dimensionMinY} 47 \"dynamic-data-storage-area\" true`);
-            checkDimension.fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY, z:0}, {x:47, y:this.dimensionMinY, z:47}), "minecraft:air");
-            checkDimension.fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY + 1, z:0}, {x:47, y:this.dimensionMinY + 1, z:47}), "minecraft:bedrock");
+            checkDimension.runCommand(`tickingarea add 0 ${this.dimensionMinY} 0 15 ${this.dimensionMinY} 15 \"dynamic-data-storage-area\" true`);
+            checkDimension.fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY, z:0}, {x:15, y:this.dimensionMinY, z:15}), "minecraft:air");
+            checkDimension.fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY + 1, z:0}, {x:15, y:this.dimensionMinY + 1, z:15}), "minecraft:bedrock");
         }
+    }
+
+    /**
+     * Call if you used a 1.x version of the library to migrate the buffers data to the new system. (Currently will override existing data in the now unused area)
+     */
+    public migrate() {
+        // Collect data from 1.x buffer into a list.
+        let data = [];
+        for (let i = 0; i < this.getUsedBytes(48*48*27, 48); i++) {
+            data.push(this.read(i, 48));
+        }
+
+        // Wipe all data from 1.x buffer.
+        world.getDimension(this.dimension).fillBlocks(new BlockVolume({x:16, y:this.dimensionMinY, z:0}, {x:47, y:this.dimensionMinY, z:47}), "minecraft:bedrock");
+        world.getDimension(this.dimension).fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY, z:16}, {x:15, y:this.dimensionMinY, z:47}), "minecraft:bedrock");
+        this.clear();
+
+        // TODO: Write data to new 2.0 buffer.
+
+        console.warn("Buffer migration complete.");
     }
 
     /**
      * Clears all of the buffers data and resets the current offset to 0.
      */
     public clear() {
-        world.getDimension(this.dimension).fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY, z:0}, {x:47, y:this.dimensionMinY, z:47}), "minecraft:air");
+        world.getDimension(this.dimension).fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY, z:0}, {x:15, y:this.dimensionMinY, z:15}), "minecraft:air");
         this.offset = 0;
     }
 
@@ -69,11 +89,11 @@ export default class Buffer {
      * @param offset The offset of the buffer to read from.
      * @returns The offset of the buffer in the form of `[x, z, slot]`.
      */
-    public getOffsetLocation(offset: number = this.offset): [number, number, number] {
+    public getOffsetLocation(offset: number = this.offset, bufferWidth: number = 16): [number, number, number] {
         let blockOffset = Math.floor(offset / 27);
 
-        let blockX = Math.floor(blockOffset / 48);
-        let blockZ = blockOffset % 48;
+        let blockX = Math.floor(blockOffset / bufferWidth);
+        let blockZ = blockOffset % bufferWidth;
 
         let blockSlot = offset % 27;
 
@@ -85,11 +105,11 @@ export default class Buffer {
      *
      * @returns The number of used bytes.
      */
-    public getUsedBytes(): number {
+    public getUsedBytes(maxSize: number = Buffer.MAX_SIZE, bufferWidth: number = 16): number {
         let count = 0;
-        for (let i = 0; i < Buffer.MAX_SIZE; i++) {
+        for (let i = 0; i < maxSize; i++) {
             try {
-                this.read(i);
+                this.read(i, bufferWidth);
                 count++;
             } catch (e) {
                 return count;
@@ -735,8 +755,8 @@ export default class Buffer {
         this.offset += bytes.length;
     }
 
-    private read(offset: number = this.offset): number {
-        let [blockX, blockZ, blockSlot]: number[] = this.getOffsetLocation(offset);
+    private read(offset: number = this.offset, bufferWidth: number = 16): number {
+        let [blockX, blockZ, blockSlot]: number[] = this.getOffsetLocation(offset, bufferWidth);
 
         let dataBlock: Block = world.getDimension(this.dimension).getBlock({x:blockX, y:this.dimensionMinY, z:blockZ})!;
 
