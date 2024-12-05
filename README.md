@@ -161,6 +161,7 @@ buffer.getDimension();
 buffer.getOffset();
 buffer.getOffsetLocation();
 buffer.getUsedBytes();
+buffer.migrate();
 buffer.remove();
 buffer.setOffset();
 ```
