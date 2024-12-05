@@ -1,12 +1,13 @@
 import { Block, BlockPermutation, BlockVolume, DimensionTypes, ItemStack, world } from "@minecraft/server";
 import Encoder from "./utils/encoder.ts";
+import JSON from "./utils/json.ts";
 import { CharSets } from "./utils/charsets.ts";
 
 /**
  * A class for parsing and writing binary data to and from a multi-barrel based buffer within a Minecraft world.
  */
 export default class Buffer {
-    public static readonly MAX_SIZE: number = 16*16*27;
+    public static readonly MAX_SIZE: number = 16*16*27*8191;
 
     private offset: number = 0;
     private dimensionMinY: number = -64;
@@ -43,8 +44,8 @@ export default class Buffer {
     public migrate() {
         // Collect data from 1.x buffer into a list.
         let data = [];
-        for (let i = 0; i < this.getUsedBytes(48*48*27, 48); i++) {
-            data.push(this.read(i, 48));
+        for (let i = 0; i < this.getUsedBytes(48*48*27, true); i++) {
+            data.push(this.readOld(i));
         }
 
         // Wipe all data from 1.x buffer.
@@ -52,7 +53,14 @@ export default class Buffer {
         world.getDimension(this.dimension).fillBlocks(new BlockVolume({x:0, y:this.dimensionMinY, z:16}, {x:15, y:this.dimensionMinY, z:47}), "minecraft:bedrock");
         this.clear();
 
-        // TODO: Write data to new 2.0 buffer.
+        // Update ticking area size.
+        world.getDimension(this.dimension).runCommand("tickingarea remove \"dynamic-data-storage-area\"");
+        world.getDimension(this.dimension).runCommand(`tickingarea add 0 ${this.dimensionMinY} 0 15 ${this.dimensionMinY} 15 \"dynamic-data-storage-area\" true`);
+
+        // Write data to new 2.0 buffer.
+        for (let i = 0; i < data.length; i++) {
+            this.write(data[i]!, i);
+        }
 
         console.warn("Buffer migration complete.");
     }
@@ -87,17 +95,18 @@ export default class Buffer {
      * Returns the current offset of the buffer as a location.
      *
      * @param offset The offset of the buffer to read from.
-     * @returns The offset of the buffer in the form of `[x, z, slot]`.
+     * @returns The offset of the buffer in the form of `[x, z, slot, index]`.
      */
-    public getOffsetLocation(offset: number = this.offset, bufferWidth: number = 16): [number, number, number] {
-        let blockOffset = Math.floor(offset / 27);
+    public getOffsetLocation(offset: number = this.offset, bufferWidth: number = 16): [number, number, number, number] {
+        let blockOffset = bufferWidth == 16 ? Math.floor(offset / (8191*27)) : Math.floor(offset / 27);
 
         let blockX = Math.floor(blockOffset / bufferWidth);
         let blockZ = blockOffset % bufferWidth;
 
-        let blockSlot = offset % 27;
+        let blockSlot = bufferWidth == 16 ? Math.floor(offset / 8191) : offset % 27;
+        let slotIndex = offset % 8191;
 
-        return [blockX, blockZ, blockSlot];
+        return [blockX, blockZ, blockSlot, slotIndex];
     }
 
     /**
@@ -105,12 +114,26 @@ export default class Buffer {
      *
      * @returns The number of used bytes.
      */
-    public getUsedBytes(maxSize: number = Buffer.MAX_SIZE, bufferWidth: number = 16): number {
+    public getUsedBytes(maxSize: number = Buffer.MAX_SIZE, legacyBuffer: boolean = false): number {
         let count = 0;
         for (let i = 0; i < maxSize; i++) {
             try {
-                this.read(i, bufferWidth);
-                count++;
+                if (legacyBuffer) {
+                    this.readOld(i);
+                    count++;
+                } else {
+                    let [blockX, blockZ, _, blockSlot]: number[] = this.getOffsetLocation(i);
+
+                    let dataBlock: Block = world.getDimension(this.dimension).getBlock({x:blockX, y:this.dimensionMinY, z:blockZ})!;
+
+                    if (dataBlock.typeId != "minecraft:barrel") {
+                        throw new Error("Offset out of bounds. Nothing to read at: " + i);
+                    }
+
+                    let dataSlot: ItemStack = dataBlock.getComponent("inventory")!.container!.getItem(blockSlot)!;
+
+                    count += (JSON.parse(dataSlot.getDynamicProperty("dynamic_data_storage") as string) as number[]).length;
+                }
             } catch (e) {
                 return count;
             }
@@ -138,8 +161,14 @@ export default class Buffer {
      *
      * @throws `Error` if there is nothing to remove at the specified offset.
      */
+    /**
+     * Removes `removeByteCount` bytes from the buffer left to right at the specified offset.
+     *
+     * Currently stubbed. Needs to be rewritten to work with the new buffer system.
+     */
     public remove(removeByteCount: number = 1, offset: number) {
-        try {
+        console.warn("Buffer.remove() is currently disabled. Functionality will return soon.");
+        /*try {
             this.read(offset);
         } catch (e) {
             throw new Error(`Nothing to remove at offset ${offset}.`);
@@ -167,7 +196,7 @@ export default class Buffer {
             this.write(value, offset + j++);
         }
 
-        this.offset -= removeByteCount;
+        this.offset -= removeByteCount;*/
     }
 
     /**
@@ -755,8 +784,54 @@ export default class Buffer {
         this.offset += bytes.length;
     }
 
-    private read(offset: number = this.offset, bufferWidth: number = 16): number {
-        let [blockX, blockZ, blockSlot]: number[] = this.getOffsetLocation(offset, bufferWidth);
+    private read(offset: number = this.offset): number {
+        let [blockX, blockZ, blockSlot, slotIndex]: number[] = this.getOffsetLocation(offset);
+
+        let dataBlock: Block = world.getDimension(this.dimension).getBlock({x:blockX, y:this.dimensionMinY, z:blockZ})!;
+
+        if (dataBlock.typeId != "minecraft:barrel") {
+            throw new Error("Offset out of bounds. Nothing to read at: " + offset);
+        }
+
+        let dataSlot: ItemStack = dataBlock.getComponent("inventory")!.container!.getItem(blockSlot)!;
+
+        let data: number[] = JSON.parse(dataSlot.getDynamicProperty("dynamic_data_storage") as string) as number[];
+
+        if (data[slotIndex] === undefined) {
+            throw new Error("Offset out of bounds. Nothing to read at: " + offset);
+        }
+        return data[slotIndex]!;
+    }
+
+    private write(value: number|bigint, offset: number = this.offset) {
+        let [blockX, blockZ, blockSlot, slotIndex]: number[] = this.getOffsetLocation(offset);
+
+        let dataBlock: Block = world.getDimension(this.dimension).getBlock({x:blockX, y:this.dimensionMinY, z:blockZ})!;
+
+        if (dataBlock!.typeId != "minecraft:barrel") {
+            world.getDimension(this.dimension).setBlockPermutation({x:blockX, y:this.dimensionMinY, z:blockZ}, BlockPermutation.resolve("minecraft:barrel", {"facing_direction": 0}));
+        }
+
+        let dataItem: ItemStack|undefined = dataBlock.getComponent("inventory")!.container!.getItem(blockSlot);
+
+        let data: number[];
+
+        if (dataItem !== undefined) {
+            let stringifiedData: string = dataItem.getDynamicProperty("dynamic_data_storage") as string;
+            data = JSON.parse(stringifiedData) as number[];
+        } else {
+            dataItem = new ItemStack("minecraft:wooden_hoe");
+            data = [];
+        }
+
+        data.splice(slotIndex, 0, Number(value));
+
+        dataItem.setDynamicProperty("dynamic_data_storage", JSON.stringify(data));
+        dataBlock.getComponent("inventory")!.container!.setItem(blockSlot, dataItem);
+    }
+
+    private readOld(offset: number = this.offset): number {
+        let [blockX, blockZ, blockSlot]: number[] = this.getOffsetLocation(offset, 48);
 
         let dataBlock: Block = world.getDimension(this.dimension).getBlock({x:blockX, y:this.dimensionMinY, z:blockZ})!;
 
@@ -780,30 +855,5 @@ export default class Buffer {
             default:
                 throw new Error("Unknown data item type: " + dataSlot.typeId);
         }
-    }
-
-    private write(value: number|bigint, offset: number = this.offset) {
-        let [blockX, blockZ, blockSlot]: number[] = this.getOffsetLocation(offset);
-
-        let dataBlock: Block = world.getDimension(this.dimension).getBlock({x:blockX, y:this.dimensionMinY, z:blockZ})!;
-
-        if (dataBlock!.typeId != "minecraft:barrel") {
-            world.getDimension(this.dimension).setBlockPermutation({x:blockX, y:this.dimensionMinY, z:blockZ}, BlockPermutation.resolve("minecraft:barrel", {"facing_direction": 0}));
-        }
-
-        let itemStack;
-        if (value == 0) {
-            itemStack = new ItemStack("minecraft:tinted_glass", 1);
-        } else if (value >= 1 && value <= 64) {
-            itemStack = new ItemStack("minecraft:white_stained_glass", Number(value));
-        } else if (value >= 65 && value <= 128) {
-            itemStack = new ItemStack("minecraft:light_gray_stained_glass", Number(value) - 64);
-        } else if (value >= 129 && value <= 192) {
-            itemStack = new ItemStack("minecraft:gray_stained_glass", Number(value) - 128);
-        } else if (value >= 193 && value <= 255) {
-            itemStack = new ItemStack("minecraft:black_stained_glass", Number(value) - 192);
-        }
-
-        dataBlock.getComponent("inventory")!.container!.setItem(blockSlot, itemStack);
     }
 }
